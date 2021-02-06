@@ -6,13 +6,25 @@ from goparser.ast import (
     FuncDecl,
     SelectorExpr,
     CallExpr,
-    ValueSpec
+    ValueSpec,
+    Comment
 )
+
+
+def flatten(p):
+    new = []
+    for i in p:
+        if isinstance(i, tuple):
+            new += i
+        else:
+            new.append(i)
+    return tuple(new)
 
 
 class GoLexer(Lexer):
     tokens = {
         PACKAGE, IMPORT, FUNC, NAME,
+        COMMENT,
         NUMBER, STRING, PLUS,
         TIMES, MINUS, DIVIDE, ASSIGN,
         LPAREN, RPAREN, LBRACE, RBRACE,
@@ -29,6 +41,8 @@ class GoLexer(Lexer):
     NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
     NUMBER = r'\d+'
     STRING = r'\"(\$\{.*\}|\\.|[^\"\\])*\"'
+
+    COMMENT = r'//.*\n'
 
     # Special symbols
     PLUS = r'\+'
@@ -73,29 +87,26 @@ class GoParser(Parser):
         'NEWLINE line',
         '_import NEWLINE line',
         '_import NEWLINE',
+        'comment line',
+        'comment',
+        'func NEWLINE line',
         'func NEWLINE'
     )
     def line(self, p):
-        if p[0] == '\n':
-            return p[1]
-        elif isinstance(p[0], Package):
+        if isinstance(p[0], Package):
+            package = p[0]
             if len(p) > 2:
-                p[0].imports.append(p[2][0])
-                if len(p[2]) > 1:
-                    if isinstance(p[2][1], tuple) and isinstance(p[2][1][0], ImportSpec):
-                        p[0].imports.append(p[2][1][0])
+                for i in p[2]:
+                    print(i)
+                    if i == '\n':
+                        continue
+                    elif isinstance(i, ImportSpec):
+                        package.imports.append(i)
                     else:
-                        p[0].decls.append(p[2][1])
-                return p[0]
-            else:
-                return p[0]
-        elif isinstance(p[0], ImportSpec):
-            if len(p) > 2:
-                return (p[0], p[2])
-            else:
-                return (p[0],)
-        elif isinstance(p[0], FuncDecl):
-            return p[0]
+                        package.decls.append(i)
+            return package
+        else:
+            return flatten(p)
 
     @_('PACKAGE NAME')
     def package(self, p):
@@ -114,6 +125,10 @@ class GoParser(Parser):
     )
     def body(self, p):
         return p[1]
+
+    @_('COMMENT')
+    def comment(self, p):
+        return Comment(p.COMMENT[2:].lstrip().rstrip())
 
     @_('NAME DOT stmt')
     def stmt(self, p):

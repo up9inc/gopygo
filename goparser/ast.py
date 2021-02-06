@@ -34,3 +34,8 @@ class ValueSpec():
     def __init__(self, _type, value):
         self._type = _type
         self.value = value
+
+
+class Comment():
+    def __init__(self, text):
+        self.text = text

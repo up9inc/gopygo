@@ -47,3 +47,16 @@ import "fmt"
 import "rsc.io/quote"
 """
         self.parse_unparse()
+
+    def test_005_single_line_comment(self):
+        self.program = """
+package main
+
+import "fmt"
+
+// Main function
+func main() {
+    fmt.Println("Hello, World!")
+}
+"""
+        self.parse_unparse()

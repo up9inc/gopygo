@@ -68,6 +68,9 @@ class Generator():
             pass  # TODO ?
         return text
 
+    def comment(self, node):
+        return '// %s\n' % node.text
+
 
 def unparse(tree):
     generator = Generator()
