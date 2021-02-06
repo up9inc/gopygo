@@ -27,5 +27,12 @@ AST library based on original go/ast package https://golang.org/pkg/go/ast/
 
 """,
     zip_safe = False,
-    install_requires = ['sly']
+    install_requires = ['sly'],
+    extras_require={
+        'dev': [
+            'flake8',
+            'pytest',
+            'coverage'
+        ]
+    },
 )

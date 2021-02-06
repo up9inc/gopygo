@@ -1,0 +1,18 @@
+language: python
+branches:
+  only:
+    - master
+    - /(\d+\.?)+/
+services:
+  - docker
+install:
+  - travis_fold start "Install.Pip.Package" && pip3 install -e .[dev] && pip3 show goparser && travis_fold end "Install.Pip.Package"
+script:
+  - stty cols 120
+  - travis_fold start "Unit.Tests" && coverage run --parallel -m pytest tests -v && travis_fold end "Unit.Tests"
+  - flake8
+after_success:
+  - coverage combine
+  - coverage report -m
+  - codecov
+
