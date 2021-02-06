@@ -16,7 +16,7 @@ class ImportSpec():
 class Field():
     def __init__(self, name: str, _type: str):
         self.name = name
-        self._type = _type
+        self.type = _type
 
 
 class FieldList():

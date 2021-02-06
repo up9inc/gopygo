@@ -6,6 +6,7 @@ from goparser.ast import (
     FuncDecl,
     FuncType,
     FieldList,
+    Field,
     BlockStmt,
     SelectorExpr,
     CallExpr,
@@ -26,7 +27,9 @@ def flatten(p):
 
 class GoLexer(Lexer):
     tokens = {
-        PACKAGE, IMPORT, FUNC, NAME,
+        PACKAGE, IMPORT, FUNC,
+        T_STRING,
+        NAME,
         COMMENT,
         NUMBER, STRING, PLUS,
         TIMES, MINUS, DIVIDE, ASSIGN,
@@ -39,6 +42,7 @@ class GoLexer(Lexer):
     PACKAGE = 'package'
     IMPORT = 'import'
     FUNC = 'func'
+    T_STRING = 'string'
 
     # Tokens
     NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -130,10 +134,27 @@ class GoParser(Parser):
         return FuncType(p[1], p[3])
 
     @_(
-        ''
+        '',
+        'field',
+        'field COMMA field_list'
     )
     def field_list(self, p):
-        return FieldList([])
+        if len(p) > 2:
+            return FieldList([p[0]] + p[2].list)
+        elif len(p) == 1:
+            return FieldList([p[0]])
+        else:
+            return FieldList([])
+
+    @_(
+        'T_STRING',
+        'NAME T_STRING'
+    )
+    def field(self, p):
+        if len(p) == 2:
+            return Field(p.NAME, p[1])
+        else:
+            return Field(None, p[0])
 
     @_(
         'LBRACE NEWLINE stmt RBRACE' # Fill all cases

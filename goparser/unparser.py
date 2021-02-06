@@ -43,13 +43,25 @@ class Generator():
         return text
 
     def func_type(self, node):
-        return '(%s)%s' % (
-            getattr(self, _get_node_type(node.params))(node.params),
-            getattr(self, _get_node_type(node.results))(node.results)
-        )
+        text = '(%s)' % getattr(self, _get_node_type(node.params))(node.params)
+
+        if node.results.list:
+            text += ' %s' % getattr(self, _get_node_type(node.results))(node.results)
+        return text
 
     def field_list(self, node):
-        return ''
+        text = ''
+        for field in node.list:
+            text += '%s, ' % getattr(self, _get_node_type(field))(field)
+        if node.list:
+            text = text[:-2]
+        return text
+
+    def field(self, node):
+        if node.name is None:
+            return '%s' % node.type
+        else:
+            return '%s %s' % (node.name, node.type)
 
     def block_stmt(self, node):
         text = '{\n'

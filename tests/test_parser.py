@@ -60,3 +60,15 @@ func main() {
 }
 """
         self.parse_unparse()
+
+    def test_006_func_type(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func Hello(name string) string {
+    fmt.Println("Hello, World!")
+}
+"""
+        self.parse_unparse()
