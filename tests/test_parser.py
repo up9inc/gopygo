@@ -3,8 +3,18 @@ from goparser import parse, unparse
 
 class TestParser():
 
+    def setup_method(self):
+        self.program = None
+
+    def parse_unparse(self):
+        self.program = self.program[1:]
+
+        tree = parse(self.program)
+        text = unparse(tree)
+        assert self.program == text
+
     def test_001_hello_world(self):
-        program = """
+        self.program = """
 package main
 
 import "fmt"
@@ -13,8 +23,27 @@ func main() {
     fmt.Println("Hello, World!")
 }
 """
-        program = program[1:]
+        self.parse_unparse()
 
-        tree = parse(program)
-        text = unparse(tree)
-        assert program == text
+    def test_002_only_package(self):
+        self.program = """
+package main
+"""
+        self.parse_unparse()
+
+    def test_003_no_declarations(self):
+        self.program = """
+package main
+
+import "fmt"
+"""
+        self.parse_unparse()
+
+    def test_004_multiple_imports(self):
+        self.program = """
+package main
+
+import "fmt"
+import "rsc.io/quote"
+"""
+        self.parse_unparse()

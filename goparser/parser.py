@@ -69,19 +69,31 @@ class GoParser(Parser):
 
     @_(
         'package NEWLINE line',
+        'package NEWLINE',
         'NEWLINE line',
         '_import NEWLINE line',
+        '_import NEWLINE',
         'func NEWLINE'
     )
     def line(self, p):
         if p[0] == '\n':
             return p[1]
         elif isinstance(p[0], Package):
-            p[0].imports.append(p[2][0])
-            p[0].decls.append(p[2][1])
-            return p[0]
+            if len(p) > 2:
+                p[0].imports.append(p[2][0])
+                if len(p[2]) > 1:
+                    if isinstance(p[2][1], tuple) and isinstance(p[2][1][0], ImportSpec):
+                        p[0].imports.append(p[2][1][0])
+                    else:
+                        p[0].decls.append(p[2][1])
+                return p[0]
+            else:
+                return p[0]
         elif isinstance(p[0], ImportSpec):
-            return (p[0], p[2])
+            if len(p) > 2:
+                return (p[0], p[2])
+            else:
+                return (p[0],)
         elif isinstance(p[0], FuncDecl):
             return p[0]
 

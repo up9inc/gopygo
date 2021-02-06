@@ -18,11 +18,14 @@ class Generator():
         self.indent = 0
 
     def package(self, node):
-        text = 'package %s\n\n' % node.name
+        text = 'package %s\n' % node.name
 
+        if node.imports:
+            text += '\n'
         for _import in node.imports:
             text += self._import(_import)
-        text += '\n'
+        if node.decls:
+            text += '\n'
 
         for decl in node.decls:
             text += getattr(self, _get_node_type(decl))(decl)
