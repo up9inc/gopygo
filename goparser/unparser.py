@@ -36,12 +36,26 @@ class Generator():
         return text
 
     def func_decl(self, node):
-        text = 'func %s(' % node.name
-        for param in node.params:
-            pass  # TODO ?
-        text += ') {\n'
-        self.indent += 1
+        text = 'func %s' % node.name
+        text += getattr(self, _get_node_type(node.type))(node.type)
+        text += ' '
         text += getattr(self, _get_node_type(node.body))(node.body)
+        return text
+
+    def func_type(self, node):
+        return '(%s)%s' % (
+            getattr(self, _get_node_type(node.params))(node.params),
+            getattr(self, _get_node_type(node.results))(node.results)
+        )
+
+    def field_list(self, node):
+        return ''
+
+    def block_stmt(self, node):
+        text = '{\n'
+        self.indent += 1
+        for stmt in node.list:
+            text += getattr(self, _get_node_type(stmt))(stmt)
         self.indent -= 1
         text += '}\n'
         return text

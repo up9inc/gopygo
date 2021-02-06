@@ -4,6 +4,9 @@ from goparser.ast import (
     Package,
     ImportSpec,
     FuncDecl,
+    FuncType,
+    FieldList,
+    BlockStmt,
     SelectorExpr,
     CallExpr,
     ValueSpec,
@@ -116,15 +119,27 @@ class GoParser(Parser):
     def _import(self, p):
         return ImportSpec(p.STRING)
 
-    @_('FUNC NAME LPAREN RPAREN LBRACE body RBRACE')
+    @_('FUNC NAME func_type block_stmt')
     def func(self, p):
-        return FuncDecl('int', p.NAME, [], p.body)
+        return FuncDecl(p.NAME, p.func_type, p.block_stmt)
 
     @_(
-        'NEWLINE stmt' # Fill all cases
+        'LPAREN field_list RPAREN field_list'
     )
-    def body(self, p):
-        return p[1]
+    def func_type(self, p):
+        return FuncType(p[1], p[3])
+
+    @_(
+        ''
+    )
+    def field_list(self, p):
+        return FieldList([])
+
+    @_(
+        'LBRACE NEWLINE stmt RBRACE' # Fill all cases
+    )
+    def block_stmt(self, p):
+        return BlockStmt([p[2]])
 
     @_('COMMENT')
     def comment(self, p):
