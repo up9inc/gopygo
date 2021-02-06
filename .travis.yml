@@ -10,7 +10,7 @@ install:
 script:
   - stty cols 120
   - travis_fold start "Unit.Tests" && coverage run --parallel -m pytest tests -v && travis_fold end "Unit.Tests"
-  - flake8
+  - flake8 --exclude=./goparser/__init__.py,./goparser/parser.py
 after_success:
   - coverage combine
   - coverage report -m

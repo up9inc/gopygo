@@ -4,6 +4,7 @@ INDENT = '    '
 
 camel_to_snake_pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
+
 def _camel_to_snake(string):
     return camel_to_snake_pattern.sub('_', string).lower()
 

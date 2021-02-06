@@ -142,3 +142,7 @@ cython_debug/
 
 # Ignore the file that are created for development
 *dev.*
+
+# Go related
+go.mod
+go.sum

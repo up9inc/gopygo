@@ -3,7 +3,7 @@ from goparser import parse, unparse
 
 class TestParser():
 
-    def test_hello_world(self):
+    def test_001_hello_world(self):
         program = """
 package main
 
