@@ -32,7 +32,8 @@ AST library based on original go/ast package https://golang.org/pkg/go/ast/
         'dev': [
             'flake8',
             'pytest',
-            'coverage'
+            'coverage',
+            'codecov'
         ]
     },
 )
