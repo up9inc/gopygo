@@ -75,3 +75,8 @@ class AssignStmt():
         self.lhs = lhs
         self.token = token
         self.rhs = rhs
+
+
+class ReturnStmt():
+    def __init__(self, results: List[str]):
+        self.results = results

@@ -46,7 +46,12 @@ class Generator():
         text = '(%s)' % getattr(self, _get_node_type(node.params))(node.params)
 
         if node.results.list:
-            text += ' %s' % getattr(self, _get_node_type(node.results))(node.results)
+            text += ' '
+            if len(node.results.list) > 1:
+                text += '('
+            text += '%s' % getattr(self, _get_node_type(node.results))(node.results)
+            if len(node.results.list) > 1:
+                text += ')'
         return text
 
     def field_list(self, node):
@@ -83,7 +88,8 @@ class Generator():
         text = '%s(' % node.fun
         for arg in node.args:
             text += '%s, ' % getattr(self, _get_node_type(arg))(arg)
-        text = text[:-2]
+        if node.args:
+            text = text[:-2]
         text += ')'
         return text
 
@@ -112,6 +118,15 @@ class Generator():
             node.token,
             getattr(self, _get_node_type(node.rhs))(node.rhs)
         )
+
+    def return_stmt(self, node):
+        text = '%sreturn ' % (self.indent * INDENT)
+        for result in node.results:
+            text += '%s, ' % getattr(self, _get_node_type(result))(result)
+        if node.results:
+            text = text[:-2]
+        text += '\n'
+        return text
 
 
 def unparse(tree):

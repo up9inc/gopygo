@@ -13,7 +13,8 @@ from goparser.ast import (
     ValueSpec,
     Comment,
     Stmt,
-    AssignStmt
+    AssignStmt,
+    ReturnStmt
 )
 
 
@@ -29,7 +30,7 @@ def flatten(p):
 
 class GoLexer(Lexer):
     tokens = {
-        PACKAGE, IMPORT, FUNC,
+        PACKAGE, IMPORT, FUNC, RETURN,
         T_STRING,
         NAME,
         COMMENT,
@@ -44,6 +45,7 @@ class GoLexer(Lexer):
     PACKAGE = 'package'
     IMPORT = 'import'
     FUNC = 'func'
+    RETURN = 'return'
     T_STRING = 'string'
 
     # Tokens
@@ -106,7 +108,7 @@ class GoParser(Parser):
         if isinstance(p[0], Package):
             package = p[0]
             if len(p) > 2:
-                for i in p[2]:
+                for i in p.line:
                     if i == '\n':
                         continue
                     elif isinstance(i, ImportSpec):
@@ -132,10 +134,11 @@ class GoParser(Parser):
         return FuncDecl(p.NAME, p.func_type, p.block_stmt)
 
     @_(
-        'LPAREN field_list RPAREN field_list'
+        'LPAREN field_list RPAREN field_list',
+        'LPAREN field_list RPAREN LPAREN field_list RPAREN'
     )
     def func_type(self, p):
-        return FuncType(p[1], p[3])
+        return FuncType(p.field_list0, p.field_list1)
 
     @_(
         '',
@@ -144,9 +147,9 @@ class GoParser(Parser):
     )
     def field_list(self, p):
         if len(p) > 2:
-            return FieldList([p[0]] + p[2].list)
+            return FieldList([p.field] + p.field_list.list)
         elif len(p) == 1:
-            return FieldList([p[0]])
+            return FieldList([p.field])
         else:
             return FieldList([])
 
@@ -173,9 +176,9 @@ class GoParser(Parser):
     )
     def stmts(self, p):
         if len(p) > 1:
-            return [p[0]] + p[1]
+            return [p.stmt] + p.stmts
         else:
-            return [p[0]]
+            return [p.stmt]
 
     @_('expr')
     def stmt(self, p):
@@ -203,6 +206,12 @@ class GoParser(Parser):
     )
     def stmt(self, p):
         return AssignStmt(p.NAME, p[1], p.expr)
+
+    @_(
+        'RETURN args NEWLINE'
+    )
+    def stmt(self, p):
+        return ReturnStmt(p.args)
 
     @_(
         '',

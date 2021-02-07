@@ -115,3 +115,19 @@ func Hello(name string) string {
 }
 """
         self.parse_unparse()
+
+    def test_010_return_stmt(self):
+        self.program = """
+package main
+
+import "fmt"
+
+// Hello returns a greeting for the named person.
+func Hello(name string) (string, string) {
+    // Return a greeting that embeds the name in a message.
+    message := fmt.Sprintf("Hi, %v. Welcome!", name)
+    message2 := fmt.Sprintf("%v, GO!", name)
+    return message, message2
+}
+"""
+        self.parse_unparse()

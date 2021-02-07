@@ -45,3 +45,5 @@ func main() {
 ## Roadmap
 
 Implement the AST nodes specified in [here](https://golang.org/pkg/go/ast/) and the parser, unparser libraries accordingly.
+
+Tokens are defined in [here](https://golang.org/pkg/go/token/#Token).
