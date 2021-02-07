@@ -63,3 +63,15 @@ class ValueSpec():
 class Comment():
     def __init__(self, text: str):
         self.text = text
+
+
+class Stmt():
+    def __init__(self, expr):
+        self.expr = expr
+
+
+class AssignStmt():
+    def __init__(self, lhs: str, token: str, rhs):
+        self.lhs = lhs
+        self.token = token
+        self.rhs = rhs

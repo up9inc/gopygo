@@ -11,7 +11,9 @@ from goparser.ast import (
     SelectorExpr,
     CallExpr,
     ValueSpec,
-    Comment
+    Comment,
+    Stmt,
+    AssignStmt
 )
 
 
@@ -32,7 +34,7 @@ class GoLexer(Lexer):
         NAME,
         COMMENT,
         NUMBER, STRING, PLUS,
-        TIMES, MINUS, DIVIDE, ASSIGN,
+        TIMES, MINUS, DIVIDE, ASSIGN, DEFINE,
         LPAREN, RPAREN, LBRACE, RBRACE,
         DOT, NEWLINE, COMMA
     }
@@ -57,6 +59,7 @@ class GoLexer(Lexer):
     TIMES = r'\*'
     DIVIDE = r'/'
     ASSIGN = r'='
+    DEFINE = r':='
     LPAREN = r'\('
     RPAREN = r'\)'
     LBRACE = r'{'
@@ -112,6 +115,8 @@ class GoParser(Parser):
                         package.decls.append(i)
             return package
         else:
+            if isinstance(p[0], Comment):
+                p[0].text += '\n'
             return flatten(p)
 
     @_('PACKAGE NAME')
@@ -172,21 +177,32 @@ class GoParser(Parser):
         else:
             return [p[0]]
 
+    @_('expr')
+    def stmt(self, p):
+        return Stmt(p.expr)
+
     @_('COMMENT')
     def comment(self, p):
         return Comment(p.COMMENT[2:].lstrip().rstrip())
 
-    @_('NAME DOT stmt')
-    def stmt(self, p):
-        return SelectorExpr(p.NAME, p.stmt)
+    @_('NAME DOT expr')
+    def expr(self, p):
+        return SelectorExpr(p.NAME, p.expr)
 
     @_('NAME LPAREN args RPAREN NEWLINE')
-    def stmt(self, p):
+    def expr(self, p):
         return CallExpr(p.NAME, p.args)
 
     @_('comment')
-    def stmt(self, p):
+    def expr(self, p):
         return p.comment
+
+    @_(
+        'NAME DEFINE expr',
+        'NAME ASSIGN expr'
+    )
+    def stmt(self, p):
+        return AssignStmt(p.NAME, p[1], p.expr)
 
     @_(
         '',
@@ -206,14 +222,6 @@ class GoParser(Parser):
     @_('STRING')
     def value(self, p):
         return ValueSpec('string', p.STRING)
-
-    @_('NAME ASSIGN expr')
-    def statement(self, p):
-        self.names[p.NAME] = p.expr
-
-    @_('expr')
-    def statement(self, p):
-        print(p.expr)
 
     @_('expr PLUS expr')
     def expr(self, p):
@@ -242,14 +250,6 @@ class GoParser(Parser):
     @_('NUMBER')
     def expr(self, p):
         return int(p.NUMBER)
-
-    @_('NAME')
-    def expr(self, p):
-        try:
-            return self.names[p.NAME]
-        except LookupError:
-            print(f'Undefined name {p.NAME!r}')
-            return 0
 
 
 lexer = GoLexer()

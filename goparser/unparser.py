@@ -73,8 +73,7 @@ class Generator():
         return text
 
     def selector_expr(self, node):
-        text = '%s%s.%s\n' % (
-            self.indent * INDENT,
+        text = '%s.%s' % (
             node.x,
             getattr(self, _get_node_type(node.sel))(node.sel)
         )
@@ -95,10 +94,24 @@ class Generator():
         return text
 
     def comment(self, node):
-        return '%s// %s\n' % (self.indent * INDENT, node.text)
+        return '// %s' % node.text
 
     def str(self, node):
         return node
+
+    def stmt(self, node):
+        return '%s%s\n' % (
+            self.indent * INDENT,
+            getattr(self, _get_node_type(node.expr))(node.expr)
+        )
+
+    def assign_stmt(self, node):
+        return '%s%s %s %s\n' % (
+            self.indent * INDENT,
+            node.lhs,
+            node.token,
+            getattr(self, _get_node_type(node.rhs))(node.rhs)
+        )
 
 
 def unparse(tree):
