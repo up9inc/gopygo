@@ -95,7 +95,10 @@ class Generator():
         return text
 
     def comment(self, node):
-        return '// %s\n' % node.text
+        return '%s// %s\n' % (self.indent * INDENT, node.text)
+
+    def str(self, node):
+        return node
 
 
 def unparse(tree):

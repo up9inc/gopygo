@@ -104,7 +104,6 @@ class GoParser(Parser):
             package = p[0]
             if len(p) > 2:
                 for i in p[2]:
-                    print(i)
                     if i == '\n':
                         continue
                     elif isinstance(i, ImportSpec):
@@ -157,10 +156,21 @@ class GoParser(Parser):
             return Field(None, p[0])
 
     @_(
-        'LBRACE NEWLINE stmt RBRACE' # Fill all cases
+        'LBRACE stmts RBRACE',
+        'LBRACE NEWLINE stmts RBRACE'
     )
     def block_stmt(self, p):
-        return BlockStmt([p[2]])
+        return BlockStmt(p.stmts)
+
+    @_(
+        'stmt',
+        'stmt stmts'
+    )
+    def stmts(self, p):
+        if len(p) > 1:
+            return [p[0]] + p[1]
+        else:
+            return [p[0]]
 
     @_('COMMENT')
     def comment(self, p):
@@ -170,13 +180,28 @@ class GoParser(Parser):
     def stmt(self, p):
         return SelectorExpr(p.NAME, p.stmt)
 
-    @_('NAME LPAREN call_params NEWLINE')
+    @_('NAME LPAREN args RPAREN NEWLINE')
     def stmt(self, p):
-        return CallExpr(p.NAME, p.call_params)
+        return CallExpr(p.NAME, p.args)
 
-    @_('value RPAREN')
-    def call_params(self, p):
-        return [p.value]
+    @_('comment')
+    def stmt(self, p):
+        return p.comment
+
+    @_(
+        '',
+        'value',
+        'NAME',
+        'value COMMA args',
+        'NAME COMMA args',
+    )
+    def args(self, p):
+        if len(p) > 2:
+            return [p[0]] + p[2]
+        elif len(p) == 1:
+            return [p[0]]
+        else:
+            return []
 
     @_('STRING')
     def value(self, p):
