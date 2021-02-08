@@ -131,3 +131,16 @@ func Hello(name string) (string, string) {
 }
 """
         self.parse_unparse()
+
+    def test_011_variable_declaration(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+    var ret string
+    var ret2 string
+}
+"""
+        self.parse_unparse()

@@ -94,9 +94,19 @@ class Generator():
         return text
 
     def value_spec(self, node):
-        text = node.value
-        if node._type:
-            pass  # TODO ?
+        text = ''
+        if node.names:
+            text += 'var '
+        for name in node.names:
+            text += '%s, ' % name
+        if node.names:
+            text = text[:-2]
+        for value in node.values:
+            text += '%s, ' % value
+        if node.values:
+            text = text[:-2]
+        if node.type is not None:
+            text += ' %s' % node.type
         return text
 
     def comment(self, node):

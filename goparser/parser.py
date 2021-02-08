@@ -30,7 +30,7 @@ def flatten(p):
 
 class GoLexer(Lexer):
     tokens = {
-        PACKAGE, IMPORT, FUNC, RETURN,
+        PACKAGE, IMPORT, FUNC, RETURN, VAR,
         T_STRING,
         NAME,
         COMMENT,
@@ -46,6 +46,7 @@ class GoLexer(Lexer):
     IMPORT = 'import'
     FUNC = 'func'
     RETURN = 'return'
+    VAR = 'var'
     T_STRING = 'string'
 
     # Tokens
@@ -213,6 +214,10 @@ class GoParser(Parser):
     def stmt(self, p):
         return ReturnStmt(p.args)
 
+    @_('value NEWLINE')
+    def stmt(self, p):
+        return Stmt(p.value)
+
     @_(
         '',
         'value',
@@ -228,9 +233,15 @@ class GoParser(Parser):
         else:
             return []
 
-    @_('STRING')
+    @_(
+        'STRING',
+        'VAR NAME T_STRING'
+    )
     def value(self, p):
-        return ValueSpec('string', p.STRING)
+        if len(p) > 2:
+            return ValueSpec([p.NAME], p[2], [])
+        else:
+            return ValueSpec([], None, [p.STRING])
 
     @_('expr PLUS expr')
     def expr(self, p):

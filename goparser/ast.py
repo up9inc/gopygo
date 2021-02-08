@@ -55,9 +55,10 @@ class CallExpr():
 
 
 class ValueSpec():
-    def __init__(self, _type: str, value):
-        self._type = _type
-        self.value = value
+    def __init__(self, names: list, _type: str, values: list):
+        self.names = names
+        self.type = _type
+        self.values = values
 
 
 class Comment():
