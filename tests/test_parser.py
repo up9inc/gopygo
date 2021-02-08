@@ -1,4 +1,4 @@
-from goparser import parse, unparse
+from gopygo import parse, unparse
 
 
 class TestParser():
@@ -110,7 +110,7 @@ import "fmt"
 // Hello returns a greeting for the named person.
 func Hello(name string) string {
     // Return a greeting that embeds the name in a message.
-    ret = Hello("goparser")
+    ret = Hello("gopygo")
     message := fmt.Sprintf("Hi, %v. Welcome!", name)
 }
 """

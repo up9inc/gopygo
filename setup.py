@@ -2,12 +2,12 @@ from setuptools import setup
 
 
 setup(
-    name="goparser",
-    packages=["goparser"],
+    name="gopygo",
+    packages=["gopygo"],
     version="0.1.0",
     author="M. Mert Yildiran",
     author_email="mehmet@up9.com",
-    url="http://github.com/up9inc/goparser",
+    url="http://github.com/up9inc/gopygo",
     description="Pure Python Go parser, AST and unparser library",
     classifiers=[
         "Programming Language :: Python",
@@ -19,10 +19,10 @@ setup(
         ],
     long_description="""\
 ========
-goparser
+gopygo
 ========
 
-goparser is a Go programming language parser written in Python.
+gopygo is a Go programming language parser written in Python.
 AST library based on original go/ast package https://golang.org/pkg/go/ast/
 
 """,

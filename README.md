@@ -1,4 +1,4 @@
-# goparser
+# gopygo
 
 Pure Python Go parser, AST and unparser library
 
@@ -13,7 +13,7 @@ $ pip3 install -e .
 Parse and unparse the Go *Hello, World!* example:
 
 ```python
->>> import goparser
+>>> import gopygo
 >>> program = """
 ... package main
 ... 
@@ -24,12 +24,12 @@ Parse and unparse the Go *Hello, World!* example:
 ... }
 ... """
 >>> program = program[1:]
->>> tree = goparser.parse(program)
+>>> tree = gopygo.parse(program)
 >>> tree
-<goparser.ast.Package object at 0x7efdc6a2e610>
+<gopygo.ast.Package object at 0x7efdc6a2e610>
 >>> tree.__dict__
-{'name': 'main', 'imports': [<goparser.ast.ImportSpec object at 0x7efdc6a2e670>], 'decls': [<goparser.ast.FuncDecl object at 0x7efdc6a2e760>]}
->>> text = goparser.unparse(tree)
+{'name': 'main', 'imports': [<gopygo.ast.ImportSpec object at 0x7efdc6a2e670>], 'decls': [<gopygo.ast.FuncDecl object at 0x7efdc6a2e760>]}
+>>> text = gopygo.unparse(tree)
 >>> print(text)
 package main
 

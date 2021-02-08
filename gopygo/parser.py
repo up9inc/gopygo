@@ -1,6 +1,6 @@
 from sly import Lexer, Parser
 
-from goparser.ast import (
+from gopygo.ast import (
     Package,
     ImportSpec,
     FuncDecl,
