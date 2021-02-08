@@ -29,7 +29,7 @@ class Generator():
 
         for decl in node.decls:
             text += getattr(self, _get_node_type(decl))(decl)
-        return text
+        return text.rstrip() + '\n'
 
     def _import(self, node):
         text = 'import %s\n' % node.path
@@ -74,7 +74,7 @@ class Generator():
         for stmt in node.list:
             text += getattr(self, _get_node_type(stmt))(stmt)
         self.indent -= 1
-        text += '}\n'
+        text += '}\n\n'
         return text
 
     def selector_expr(self, node):
@@ -122,11 +122,21 @@ class Generator():
         )
 
     def assign_stmt(self, node):
+        lhs = ''
+        for _node in node.lhs:
+            lhs += '%s, ' % getattr(self, _get_node_type(_node))(_node)
+        if node.lhs:
+            lhs = lhs[:-2]
+        rhs = ''
+        for _node in node.rhs:
+            rhs += '%s, ' % getattr(self, _get_node_type(_node))(_node)
+        if node.rhs:
+            rhs = rhs[:-2]
         return '%s%s %s %s\n' % (
             self.indent * INDENT,
-            node.lhs,
+            lhs,
             node.token,
-            getattr(self, _get_node_type(node.rhs))(node.rhs)
+            rhs
         )
 
     def return_stmt(self, node):

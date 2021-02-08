@@ -144,3 +144,43 @@ func main() {
 }
 """
         self.parse_unparse()
+
+    def test_012_lhs_list_assign_stmt(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+    var ret string
+    var ret2 string
+    ret, ret2 = Hello("gopygo")
+    fmt.Println(ret)
+    fmt.Println(ret2)
+}
+"""
+        self.parse_unparse()
+
+    def test_013_milestone_1_multiple_func_decls(self):
+        self.program = """
+package main
+
+import "fmt"
+
+// Hello returns a greeting for the named person.
+func Hello(name string) (string, string) {
+    // Return a greeting that embeds the name in a message.
+    message := fmt.Sprintf("Hi, %v. Welcome!", name)
+    message2 := fmt.Sprintf("%v, GO!", name)
+    return message, message2
+}
+
+func main() {
+    var ret string
+    var ret2 string
+    ret, ret2 = Hello("gopygo")
+    fmt.Println(ret)
+    fmt.Println(ret2)
+}
+"""
+        self.parse_unparse()

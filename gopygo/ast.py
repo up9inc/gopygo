@@ -72,7 +72,7 @@ class Stmt():
 
 
 class AssignStmt():
-    def __init__(self, lhs: str, token: str, rhs):
+    def __init__(self, lhs: list, token: str, rhs: list):
         self.lhs = lhs
         self.token = token
         self.rhs = rhs

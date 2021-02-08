@@ -201,12 +201,30 @@ class GoParser(Parser):
     def expr(self, p):
         return p.comment
 
-    @_(
-        'NAME DEFINE expr',
-        'NAME ASSIGN expr'
-    )
+    @_('assign_stmt')
     def stmt(self, p):
-        return AssignStmt(p.NAME, p[1], p.expr)
+        return p.assign_stmt
+
+    @_('NAME')
+    def expr(self, p):
+        return p.NAME
+
+    @_(
+        'expr',
+        'expr COMMA expr_list'
+    )
+    def expr_list(self, p):
+        if len(p) > 1:
+            return [p.expr] + p.expr_list
+        else:
+            return [p.expr]
+
+    @_(
+        'expr_list DEFINE expr_list',
+        'expr_list ASSIGN expr_list'
+    )
+    def assign_stmt(self, p):
+        return AssignStmt(p.expr_list0, p[1], p.expr_list1)
 
     @_(
         'RETURN args NEWLINE'
