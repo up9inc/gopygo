@@ -31,7 +31,7 @@ class Generator():
         if node.imports:
             text += '\n'
         for _import in node.imports:
-            text += self._import(_import)
+            text += getattr(self, _get_node_type(_import))(_import)
         if node.decls:
             text += '\n'
 
@@ -39,7 +39,7 @@ class Generator():
             text += getattr(self, _get_node_type(decl))(decl)
         return text.rstrip() + '\n'
 
-    def _import(self, node):
+    def import_spec(self, node):
         text = 'import %s\n' % node.path
         return text
 
@@ -48,6 +48,7 @@ class Generator():
         text += getattr(self, _get_node_type(node.type))(node.type)
         text += ' '
         text += getattr(self, _get_node_type(node.body))(node.body)
+        text = text.rstrip() + '\n\n'
         return text
 
     def func_type(self, node):
@@ -82,7 +83,7 @@ class Generator():
         for stmt in node.list:
             text += getattr(self, _get_node_type(stmt))(stmt)
         self.indent -= 1
-        text += '}\n\n'
+        text += '}\n'
         return text
 
     def selector_expr(self, node):
@@ -183,4 +184,10 @@ class Generator():
 
 def unparse(tree):
     generator = Generator()
-    return getattr(generator, _get_node_type(tree))(tree)
+    if isinstance(tree, (tuple, list)):
+        result = ''
+        for el in tree:
+            result += getattr(generator, _get_node_type(el))(el).rstrip() + '\n'
+        return result
+    else:
+        return getattr(generator, _get_node_type(tree))(tree).rstrip() + '\n'

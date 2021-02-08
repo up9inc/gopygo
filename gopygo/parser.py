@@ -109,6 +109,16 @@ class GoParser(Parser):
         self.names = { }
 
     @_(
+        'line'
+    )
+    def start(self, p):
+        print(p.line)
+        if isinstance(p.line, tuple) and len(p.line) == 1:
+            return p.line[0]
+        else:
+            return p.line
+
+    @_(
         'package NEWLINE line',
         'package NEWLINE',
         'NEWLINE line',
@@ -117,16 +127,16 @@ class GoParser(Parser):
         'comment line',
         'comment',
         'func NEWLINE line',
-        'func NEWLINE'
+        'func NEWLINE',
+        'stmt line',
+        'stmt'
     )
     def line(self, p):
         if isinstance(p[0], Package):
             package = p[0]
             if len(p) > 2:
                 for i in p.line:
-                    if i == '\n':
-                        continue
-                    elif isinstance(i, ImportSpec):
+                    if isinstance(i, ImportSpec):
                         package.imports.append(i)
                     else:
                         package.decls.append(i)
@@ -134,7 +144,10 @@ class GoParser(Parser):
         else:
             if isinstance(p[0], Comment):
                 p[0].text += '\n'
-            return flatten(p)
+            if len(p) > 1:
+                return tuple(filter(lambda x: x!= '\n', flatten(p)))
+            else:
+                return p[0]
 
     @_('PACKAGE NAME')
     def package(self, p):
