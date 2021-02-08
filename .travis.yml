@@ -15,4 +15,9 @@ after_success:
   - coverage combine
   - coverage report -m
   - codecov
-
+deploy:
+  edge: true  # use latest v2 deploy
+  provider: pypi
+  #  skip_cleanup: true
+  on:
+    tags: true
