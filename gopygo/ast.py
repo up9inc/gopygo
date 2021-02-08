@@ -1,3 +1,11 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+.. module:: __init__
+    :synopsis: Go AST classes.
+"""
+
 from typing import List
 
 
@@ -81,3 +89,21 @@ class AssignStmt():
 class ReturnStmt():
     def __init__(self, results: List[str]):
         self.results = results
+
+
+class BinaryExpr():
+    def __init__(self, x, op: str, y):
+        self.x = x
+        self.op = op
+        self.y = y
+
+
+class UnaryExpr():
+    def __init__(self, op: str, x):
+        self.op = op
+        self.x = x
+
+
+class ParenExpr():
+    def __init__(self, x):
+        self.x = x

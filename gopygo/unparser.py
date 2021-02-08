@@ -1,3 +1,11 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+.. module:: __init__
+    :synopsis: Go unparser (code generator) module.
+"""
+
 import re
 
 INDENT = '    '
@@ -147,6 +155,30 @@ class Generator():
             text = text[:-2]
         text += '\n'
         return text
+
+    def binary_expr(self, node):
+        x = node.x
+        x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
+        y = node.y
+        y = getattr(self, _get_node_type(y))(y) if not isinstance(y, str) else y
+        return '%s %s %s' % (
+            x,
+            node.op,
+            y
+        )
+
+    def unary_expr(self, node):
+        x = node.x
+        x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
+        return '%s %s' % (
+            node.op,
+            x
+        )
+
+    def paren_expr(self, node):
+        x = node.x
+        x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
+        return '(%s)' % x
 
 
 def unparse(tree):

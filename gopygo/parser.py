@@ -1,3 +1,11 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+"""
+.. module:: __init__
+    :synopsis: Go parser module.
+"""
+
 from sly import Lexer, Parser
 
 from gopygo.ast import (
@@ -14,7 +22,13 @@ from gopygo.ast import (
     Comment,
     Stmt,
     AssignStmt,
-    ReturnStmt
+    ReturnStmt,
+    BinaryExpr,
+    UnaryExpr,
+    ParenExpr
+)
+from gopygo.exceptions import (
+    LexerError
 )
 
 
@@ -79,8 +93,8 @@ class GoLexer(Lexer):
     #     self.lineno += t.value.count('\n')
 
     def error(self, t):
-        print("Illegal character '%s'" % t.value[0])
-        self.index += 1
+        raise LexerError("Illegal character '%s'" % t.value[0])
+
 
 class GoParser(Parser):
     tokens = GoLexer.tokens
@@ -181,7 +195,10 @@ class GoParser(Parser):
         else:
             return [p.stmt]
 
-    @_('expr')
+    @_(
+        'expr',
+        'expr NEWLINE'
+    )
     def stmt(self, p):
         return Stmt(p.expr)
 
@@ -193,7 +210,7 @@ class GoParser(Parser):
     def expr(self, p):
         return SelectorExpr(p.NAME, p.expr)
 
-    @_('NAME LPAREN args RPAREN NEWLINE')
+    @_('NAME LPAREN args RPAREN')
     def expr(self, p):
         return CallExpr(p.NAME, p.args)
 
@@ -201,7 +218,7 @@ class GoParser(Parser):
     def expr(self, p):
         return p.comment
 
-    @_('assign_stmt')
+    @_('assign_stmt NEWLINE')
     def stmt(self, p):
         return p.assign_stmt
 
@@ -263,31 +280,31 @@ class GoParser(Parser):
 
     @_('expr PLUS expr')
     def expr(self, p):
-        return p.expr0 + p.expr1
+        return BinaryExpr(p.expr0, '+', p.expr1)
 
     @_('expr MINUS expr')
     def expr(self, p):
-        return p.expr0 - p.expr1
+        return BinaryExpr(p.expr0, '-', p.expr1)
 
     @_('expr TIMES expr')
     def expr(self, p):
-        return p.expr0 * p.expr1
+        return BinaryExpr(p.expr0, '*', p.expr1)
 
     @_('expr DIVIDE expr')
     def expr(self, p):
-        return p.expr0 / p.expr1
+        return BinaryExpr(p.expr0, '/', p.expr1)
 
     @_('MINUS expr %prec UMINUS')
     def expr(self, p):
-        return -p.expr
+        return UnaryExpr('-', p.expr)
 
     @_('LPAREN expr RPAREN')
     def expr(self, p):
-        return p.expr
+        return ParenExpr(p.expr)
 
     @_('NUMBER')
     def expr(self, p):
-        return int(p.NUMBER)
+        return p.NUMBER
 
 
 lexer = GoLexer()
