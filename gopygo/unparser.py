@@ -104,16 +104,16 @@ class Generator():
 
     def value_spec(self, node):
         text = ''
-        if node.names:
+        if node.is_decl or (node.type is not None and node.names):
             text += 'var '
         for name in node.names:
             text += '%s, ' % name
         if node.names:
             text = text[:-2]
-        for value in node.values:
-            text += '%s, ' % value
-        if node.values:
-            text = text[:-2]
+        # for value in node.values:
+        #     text += '%s, ' % value
+        # if node.values:
+        #     text = text[:-2]
         if node.type is not None:
             text += ' %s' % node.type
         return text
@@ -131,21 +131,11 @@ class Generator():
         )
 
     def assign_stmt(self, node):
-        lhs = ''
-        for _node in node.lhs:
-            lhs += '%s, ' % getattr(self, _get_node_type(_node))(_node)
-        if node.lhs:
-            lhs = lhs[:-2]
-        rhs = ''
-        for _node in node.rhs:
-            rhs += '%s, ' % getattr(self, _get_node_type(_node))(_node)
-        if node.rhs:
-            rhs = rhs[:-2]
         return '%s%s %s %s\n' % (
             self.indent * INDENT,
-            lhs,
+            getattr(self, _get_node_type(node.lhs))(node.lhs),
             node.token,
-            rhs
+            getattr(self, _get_node_type(node.rhs))(node.rhs),
         )
 
     def return_stmt(self, node):
@@ -180,6 +170,14 @@ class Generator():
         x = node.x
         x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
         return '(%s)' % x
+
+    def list(self, node):
+        text = ''
+        for el in node:
+            text += '%s, ' % el
+        if node:
+            text = text[:-2]
+        return text
 
 
 def unparse(tree):

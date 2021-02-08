@@ -116,6 +116,30 @@ func Hello(name string) (string, string) {
         self.program = """
 var ret string
 var ret2 string
+var a = "initial"
+var a uint8 = 2
+var b, c string
+var b, c int = 1, 2
+var b, c int32 = 1, 2
+var a, b, c int32 = 1, 2, 3
+var d = true
+var e int
+f := "apple"
+var X uint8 = 225
+var Y int16 = 32767
+a := 20.45
+b := 34.89
+c := b - a
+var a complex128 = complex(6, 2)
+var b complex64 = complex(9, 2)
+str1 := "Test"
+var ToBe bool = false
+ToBe = true
+var absoluteZero int = - 459
+sum := 116 - 68
+var maxUint32 uint32 = 4294967295
+var pi float64
+var pi float64 = 3.14
 """
         self.parse_unparse()
 

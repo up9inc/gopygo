@@ -44,15 +44,33 @@ def flatten(p):
 
 class GoLexer(Lexer):
     tokens = {
+        # Keywords
         PACKAGE, IMPORT, FUNC, RETURN, VAR,
-        T_STRING,
-        NAME,
+
+        # Data types
+        BOOL,
+        INT8, INT16, INT32, INT64,
+        UINT8, UINT16, UINT32, UINT64,
+        INT, UINT, RUNE, BYTE, UINTPTR,
+        FLOAT32, FLOAT64,
+        COMPLEX64, COMPLEX128,
+        STRING,
+
+        # Literals
+        NAME, NUMBER, STRING_LITERAL, TRUE, FALSE,
+
+        # Comment
         COMMENT,
-        NUMBER, STRING, PLUS,
-        TIMES, MINUS, DIVIDE, ASSIGN, DEFINE,
+
+        # Operators
+        ASSIGN, DEFINE,
+        PLUS, TIMES, MINUS, DIVIDE,
         LPAREN, RPAREN, LBRACE, RBRACE,
+
+        # Separators
         DOT, NEWLINE, COMMA
     }
+
     ignore = ' \t'
 
     # Keywords
@@ -61,26 +79,49 @@ class GoLexer(Lexer):
     FUNC = 'func'
     RETURN = 'return'
     VAR = 'var'
-    T_STRING = 'string'
 
-    # Tokens
+    # Data types
+    BOOL = 'bool'
+    INT8 = 'int8'
+    INT16 = 'int16'
+    INT32 = 'int32'
+    INT64 = 'int64'
+    UINT8 = 'uint8'
+    UINT16 = 'uint16'
+    UINT32 = 'uint32'
+    UINT64 = 'uint64'
+    INT = 'int'
+    UINT = 'uint'
+    RUNE = 'rune'
+    BYTE = 'byte'
+    UINTPTR = 'uintptr'
+    FLOAT32 = 'float32'
+    FLOAT64 = 'float64'
+    COMPLEX64 = 'complex64'
+    COMPLEX128 = 'complex128'
+    STRING = 'string'
+
+    # Literals
     NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
-    NUMBER = r'\d+'
-    STRING = r'\"(\$\{.*\}|\\.|[^\"\\])*\"'
+    NUMBER = r'[0-9]+\.[0-9]+|[0-9]+'
+    STRING_LITERAL = r'\"(\$\{.*\}|\\.|[^\"\\])*\"'
 
+    # Comment
     COMMENT = r'//.*\n'
 
-    # Special symbols
+    # Operators
+    ASSIGN = r'='
+    DEFINE = r':='
     PLUS = r'\+'
     MINUS = r'-'
     TIMES = r'\*'
     DIVIDE = r'/'
-    ASSIGN = r'='
-    DEFINE = r':='
     LPAREN = r'\('
     RPAREN = r'\)'
     LBRACE = r'{'
     RBRACE = r'}'
+
+    # Separators
     DOT = r'\.'
     NEWLINE = r'\n'
     COMMA = r'\,'
@@ -112,7 +153,6 @@ class GoParser(Parser):
         'line'
     )
     def start(self, p):
-        print(p.line)
         if isinstance(p.line, tuple) and len(p.line) == 1:
             return p.line[0]
         else:
@@ -153,9 +193,9 @@ class GoParser(Parser):
     def package(self, p):
         return Package(p.NAME)
 
-    @_('IMPORT STRING')
+    @_('IMPORT STRING_LITERAL')
     def _import(self, p):
-        return ImportSpec(p.STRING)
+        return ImportSpec(p.STRING_LITERAL)
 
     @_('FUNC NAME func_type block_stmt')
     def func(self, p):
@@ -182,8 +222,8 @@ class GoParser(Parser):
             return FieldList([])
 
     @_(
-        'T_STRING',
-        'NAME T_STRING'
+        'STRING',
+        'NAME STRING'
     )
     def field(self, p):
         if len(p) == 2:
@@ -235,26 +275,12 @@ class GoParser(Parser):
     def stmt(self, p):
         return p.assign_stmt
 
-    @_('NAME')
-    def expr(self, p):
-        return p.NAME
-
     @_(
-        'expr',
-        'expr COMMA expr_list'
-    )
-    def expr_list(self, p):
-        if len(p) > 1:
-            return [p.expr] + p.expr_list
-        else:
-            return [p.expr]
-
-    @_(
-        'expr_list DEFINE expr_list',
-        'expr_list ASSIGN expr_list'
+        'expr DEFINE expr',
+        'expr ASSIGN expr'
     )
     def assign_stmt(self, p):
-        return AssignStmt(p.expr_list0, p[1], p.expr_list1)
+        return AssignStmt(p.expr0, p[1], p.expr1)
 
     @_(
         'RETURN args NEWLINE'
@@ -262,16 +288,22 @@ class GoParser(Parser):
     def stmt(self, p):
         return ReturnStmt(p.args)
 
-    @_('value NEWLINE')
+    @_('value_spec')
+    def expr(self, p):
+        return p.value_spec
+
+    @_('value_spec NEWLINE')
     def stmt(self, p):
-        return Stmt(p.value)
+        return Stmt(p.value_spec)
 
     @_(
         '',
-        'value',
+        'value_spec',
         'NAME',
-        'value COMMA args',
-        'NAME COMMA args',
+        'expr',
+        'value_spec COMMA args',
+        'expr COMMA args',
+        'NAME COMMA args'
     )
     def args(self, p):
         if len(p) > 2:
@@ -282,14 +314,49 @@ class GoParser(Parser):
             return []
 
     @_(
+        'BOOL',
+        'INT8',
+        'INT16',
+        'INT32',
+        'INT64',
+        'UINT8',
+        'UINT16',
+        'UINT32',
+        'UINT64',
+        'INT',
+        'UINT',
+        'RUNE',
+        'BYTE',
+        'UINTPTR',
+        'FLOAT32',
+        'FLOAT64',
+        'COMPLEX64',
+        'COMPLEX128',
         'STRING',
-        'VAR NAME T_STRING'
     )
-    def value(self, p):
-        if len(p) > 2:
-            return ValueSpec([p.NAME], p[2], [])
+    def type(self, p):
+        return p[0]
+
+    @_(
+        'VAR NAME COMMA value_spec type',
+        'VAR NAME COMMA value_spec',
+        'NAME COMMA value_spec type',
+        'NAME COMMA value_spec',
+        'VAR NAME type',
+        'VAR NAME',
+        'NAME type',
+        'NAME'
+    )
+    def value_spec(self, p):
+        if hasattr(p, 'value_spec'):
+            return ValueSpec([p.NAME] + p.value_spec.names, p.value_spec.type, [])
+        elif len(p) > 1:
+            _type = None
+            if hasattr(p, 'type'):
+                _type = p.type
+            return ValueSpec([p.NAME], _type, [], is_decl=hasattr(p, 'VAR'))
         else:
-            return ValueSpec([], None, [p.STRING])
+            return ValueSpec([p.NAME], None, [])
 
     @_('expr PLUS expr')
     def expr(self, p):
@@ -314,6 +381,14 @@ class GoParser(Parser):
     @_('LPAREN expr RPAREN')
     def expr(self, p):
         return ParenExpr(p.expr)
+
+    @_('expr COMMA expr')
+    def expr(self, p):
+        return [p.expr0] + list(flatten(p.expr1))
+
+    @_('STRING_LITERAL')
+    def expr(self, p):
+        return p.STRING_LITERAL
 
     @_('NUMBER')
     def expr(self, p):
