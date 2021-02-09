@@ -140,6 +140,10 @@ sum := 116 - 68
 var maxUint32 uint32 = 4294967295
 var pi float64
 var pi float64 = 3.14
+var x complex128 = 1 + 2i
+var y complex128 = 1 + 3.14i
+var r rune = 'a'
+var b byte = 'b'
 """
         self.parse_unparse()
 
@@ -191,12 +195,6 @@ c := 3 * 5
 d := 3 / 5
 e := - 5
 f := 3 * (5 + 7)
-fmt.Println(a)
-fmt.Println(b)
-fmt.Println(c)
-fmt.Println(d)
-fmt.Println(e)
-fmt.Println(f)
 """
         self.parse_unparse()
 

@@ -56,8 +56,8 @@ class GoLexer(Lexer):
         COMPLEX64, COMPLEX128,
         STRING,
 
-        # Literals
-        NAME, NUMBER, STRING_LITERAL, TRUE, FALSE,
+        # Identifiers and basic type literals
+        IDENT, IMAG_LITERAL, FLOAT_LITERAL, INT_LITERAL, CHAR_LITERAL, STRING_LITERAL, TRUE, FALSE,
 
         # Comment
         COMMENT,
@@ -105,10 +105,15 @@ class GoLexer(Lexer):
     COMPLEX128 = 'complex128'
     STRING = 'string'
 
-    # Literals
-    NAME = r'[a-zA-Z_][a-zA-Z0-9_]*'
-    NUMBER = r'[0-9]+\.[0-9]+|[0-9]+'
+    # Identifiers and basic type literals
+    IMAG_LITERAL = r'[0-9]+\.[0-9]+i|[0-9]+i'
+    FLOAT_LITERAL = r'[0-9]+\.[0-9]+'
+    INT_LITERAL = r'[0-9]+'
+    CHAR_LITERAL = r'\'(\$\{.*\}|\\.|[^\'\\])*\''
     STRING_LITERAL = r'\"(\$\{.*\}|\\.|[^\"\\])*\"'
+    TRUE = r'true'
+    FALSE = r'false'
+    IDENT = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
     # Comment
     COMMENT = r'//.*\n'
@@ -231,17 +236,17 @@ class GoParser(Parser):
             else:
                 return p[0]
 
-    @_('PACKAGE NAME')
+    @_('PACKAGE IDENT')
     def package(self, p):
-        return Package(p.NAME)
+        return Package(p.IDENT)
 
     @_('IMPORT STRING_LITERAL')
     def _import(self, p):
         return ImportSpec(p.STRING_LITERAL)
 
-    @_('FUNC NAME func_type block_stmt')
+    @_('FUNC IDENT func_type block_stmt')
     def func(self, p):
-        return FuncDecl(p.NAME, p.func_type, p.block_stmt)
+        return FuncDecl(p.IDENT, p.func_type, p.block_stmt)
 
     @_(
         'LPAREN field_list RPAREN field_list',
@@ -265,11 +270,11 @@ class GoParser(Parser):
 
     @_(
         'STRING',
-        'NAME STRING'
+        'IDENT STRING'
     )
     def field(self, p):
         if len(p) == 2:
-            return Field(p.NAME, p[1])
+            return Field(p.IDENT, p[1])
         else:
             return Field(None, p[0])
 
@@ -301,13 +306,13 @@ class GoParser(Parser):
     def comment(self, p):
         return Comment(p.COMMENT[2:].lstrip().rstrip())
 
-    @_('NAME PERIOD expr')
+    @_('IDENT PERIOD expr')
     def expr(self, p):
-        return SelectorExpr(p.NAME, p.expr)
+        return SelectorExpr(p.IDENT, p.expr)
 
-    @_('NAME LPAREN args RPAREN')
+    @_('IDENT LPAREN args RPAREN')
     def expr(self, p):
-        return CallExpr(p.NAME, p.args)
+        return CallExpr(p.IDENT, p.args)
 
     @_('comment')
     def expr(self, p):
@@ -341,11 +346,11 @@ class GoParser(Parser):
     @_(
         '',
         'value_spec',
-        'NAME',
+        'IDENT',
         'expr',
         'value_spec COMMA args',
         'expr COMMA args',
-        'NAME COMMA args'
+        'IDENT COMMA args'
     )
     def args(self, p):
         if len(p) > 2:
@@ -380,25 +385,25 @@ class GoParser(Parser):
         return p[0]
 
     @_(
-        'VAR NAME COMMA value_spec type',
-        'VAR NAME COMMA value_spec',
-        'NAME COMMA value_spec type',
-        'NAME COMMA value_spec',
-        'VAR NAME type',
-        'VAR NAME',
-        'NAME type',
-        'NAME'
+        'VAR IDENT COMMA value_spec type',
+        'VAR IDENT COMMA value_spec',
+        'IDENT COMMA value_spec type',
+        'IDENT COMMA value_spec',
+        'VAR IDENT type',
+        'VAR IDENT',
+        'IDENT type',
+        'IDENT'
     )
     def value_spec(self, p):
         if hasattr(p, 'value_spec'):
-            return ValueSpec([p.NAME] + p.value_spec.names, p.value_spec.type, [])
+            return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, [])
         elif len(p) > 1:
             _type = None
             if hasattr(p, 'type'):
                 _type = p.type
-            return ValueSpec([p.NAME], _type, [], is_decl=hasattr(p, 'VAR'))
+            return ValueSpec([p.IDENT], _type, [], is_decl=hasattr(p, 'VAR'))
         else:
-            return ValueSpec([p.NAME], None, [])
+            return ValueSpec([p.IDENT], None, [])
 
     @_('expr ADD expr')
     def expr(self, p):
@@ -428,13 +433,33 @@ class GoParser(Parser):
     def expr(self, p):
         return [p.expr0] + list(flatten(p.expr1))
 
+    @_('IMAG_LITERAL')
+    def expr(self, p):
+        return p.IMAG_LITERAL
+
+    @_('FLOAT_LITERAL')
+    def expr(self, p):
+        return p.FLOAT_LITERAL
+
+    @_('INT_LITERAL')
+    def expr(self, p):
+        return p.INT_LITERAL
+
+    @_('CHAR_LITERAL')
+    def expr(self, p):
+        return p.CHAR_LITERAL
+
     @_('STRING_LITERAL')
     def expr(self, p):
         return p.STRING_LITERAL
 
-    @_('NUMBER')
+    @_('TRUE')
     def expr(self, p):
-        return p.NUMBER
+        return p.TRUE
+
+    @_('FALSE')
+    def expr(self, p):
+        return p.FALSE
 
 
 lexer = GoLexer()
