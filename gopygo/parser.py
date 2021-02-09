@@ -314,9 +314,12 @@ class GoParser(Parser):
     def expr(self, p):
         return SelectorExpr(p.IDENT, p.expr)
 
-    @_('IDENT LPAREN args RPAREN')
+    @_(
+        'IDENT LPAREN args RPAREN',
+        'type LPAREN args RPAREN'
+    )
     def expr(self, p):
-        return CallExpr(p.IDENT, p.args)
+        return CallExpr(p[0], p.args)
 
     @_('comment')
     def expr(self, p):
