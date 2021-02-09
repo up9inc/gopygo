@@ -45,7 +45,7 @@ def flatten(p):
 class GoLexer(Lexer):
     tokens = {
         # Keywords
-        PACKAGE, IMPORT, FUNC, RETURN, VAR,
+        PACKAGE, IMPORT, FUNC, RETURN, VAR, CONST,
 
         # Data types
         BOOL,
@@ -83,6 +83,7 @@ class GoLexer(Lexer):
     FUNC = 'func'
     RETURN = 'return'
     VAR = 'var'
+    CONST = 'const'
 
     # Data types
     BOOL = 'bool'
@@ -108,7 +109,7 @@ class GoLexer(Lexer):
     # Identifiers and basic type literals
     IMAG_LITERAL = r'[0-9]+\.[0-9]+i|[0-9]+i'
     FLOAT_LITERAL = r'[0-9]+\.[0-9]+'
-    INT_LITERAL = r'[0-9]+'
+    INT_LITERAL = r'[0-9]+e[0-9]+|[0-9]+'
     CHAR_LITERAL = r'\'(\$\{.*\}|\\.|[^\'\\])*\''
     STRING_LITERAL = r'\"(\$\{.*\}|\\.|[^\"\\])*\"'
     TRUE = r'true'
@@ -287,10 +288,13 @@ class GoParser(Parser):
 
     @_(
         'stmt',
-        'stmt stmts'
+        'stmt stmts',
+        'NEWLINE stmts'
     )
     def stmts(self, p):
-        if len(p) > 1:
+        if p[0] == '\n':
+            return p.stmts
+        elif len(p) > 1:
             return [p.stmt] + p.stmts
         else:
             return [p.stmt]
@@ -398,10 +402,14 @@ class GoParser(Parser):
     @_(
         'VAR IDENT COMMA value_spec type',
         'VAR IDENT COMMA value_spec',
+        'CONST IDENT COMMA value_spec type',
+        'CONST IDENT COMMA value_spec',
         'IDENT COMMA value_spec type',
         'IDENT COMMA value_spec',
         'VAR IDENT type',
         'VAR IDENT',
+        'CONST IDENT type',
+        'CONST IDENT',
         'IDENT type',
         'IDENT'
     )
@@ -412,7 +420,12 @@ class GoParser(Parser):
             _type = None
             if hasattr(p, 'type'):
                 _type = p.type
-            return ValueSpec([p.IDENT], _type, [], is_decl=hasattr(p, 'VAR'))
+            decl = None
+            if hasattr(p, 'VAR'):
+                decl = p.VAR
+            elif hasattr(p, 'CONST'):
+                decl = p.CONST
+            return ValueSpec([p.IDENT], _type, [], decl=decl)
         else:
             return ValueSpec([p.IDENT], None, [])
 

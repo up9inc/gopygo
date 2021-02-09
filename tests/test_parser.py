@@ -247,6 +247,34 @@ import "rsc.io/quote"
 """
         self.parse_unparse()
 
+    def test_018_const(self):
+        self.program = """
+const s string = "constant"
+const n = 500000000
+const d = 3e20 / n
+"""
+        self.parse_unparse()
+
+    def test_019_empty_line_after_block_stmt_start(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+
+    fmt.Println("go" + "lang")
+}
+"""
+        self.program = self.program[1:]
+
+        tree = parse(self.program)
+        text = unparse(tree)
+        lines = self.program.split('\n')
+        del lines[5]
+        self.program = '\n'.join(lines)
+        assert self.program == text
+
 
 class TestExceptions():
 

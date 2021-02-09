@@ -104,8 +104,11 @@ class Generator():
 
     def value_spec(self, node):
         text = ''
-        if node.is_decl or (node.type is not None and node.names):
+        if node.decl is not None:
+            text += '%s ' % node.decl
+        elif node.type is not None and node.names:
             text += 'var '
+
         for name in node.names:
             text += '%s, ' % name
         if node.names:
