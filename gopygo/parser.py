@@ -63,12 +63,16 @@ class GoLexer(Lexer):
         COMMENT,
 
         # Operators
-        ASSIGN, DEFINE,
-        PLUS, TIMES, MINUS, DIVIDE,
-        LPAREN, RPAREN, LBRACE, RBRACE,
+        ADD_ASSIGN, SUB_ASSIGN, MUL_ASSIGN, QUO_ASSIGN, REM_ASSIGN,
+        AND_ASSIGN, OR_ASSIGN, XOR_ASSIGN, AND_NOT_ASSIGN, SHL_ASSIGN, SHR_ASSIGN,
+        LAND, LOR, ARROW, INC, DEC, EQL, SHL, SHR, AND_NOT,
+        NEQ, LEQ, GEQ, DEFINE, ELLIPSIS,
+        ADD, SUB, MUL, QUO, REM, AND, OR, XOR, LSS, GTR, ASSIGN, NOT,
 
-        # Separators
-        DOT, NEWLINE, COMMA
+        # Delimiters
+        LPAREN, LBRACK, LBRACE, COMMA, PERIOD,
+        RPAREN, RBRACE, SEMICOLON, COLON,
+        NEWLINE,
     }
 
     ignore = ' \t'
@@ -110,21 +114,59 @@ class GoLexer(Lexer):
     COMMENT = r'//.*\n'
 
     # Operators
-    ASSIGN = r'='
-    DEFINE = r':='
-    PLUS = r'\+'
-    MINUS = r'-'
-    TIMES = r'\*'
-    DIVIDE = r'/'
-    LPAREN = r'\('
-    RPAREN = r'\)'
-    LBRACE = r'{'
-    RBRACE = r'}'
+    ADD_ASSIGN = r'\+='
+    SUB_ASSIGN = r'-='
+    MUL_ASSIGN = r'\*='
+    QUO_ASSIGN = r'/='
+    REM_ASSIGN = r'%='
+    AND_ASSIGN = r'&='
+    OR_ASSIGN = r'\|='
+    XOR_ASSIGN = r'^='
+    AND_NOT_ASSIGN = r'&^='
+    SHL_ASSIGN = r'<<='
+    SHR_ASSIGN = r'>>='
 
-    # Separators
-    DOT = r'\.'
-    NEWLINE = r'\n'
+    LAND = r'&&'
+    LOR = r'\|\|'
+    ARROW = r'<-'
+    INC = r'\+\+'
+    DEC = r'--'
+    EQL = r'=='
+    SHL = r'<<'
+    SHR = r'>>'
+    AND_NOT = r'&^'
+    NEQ = r'!='
+    LEQ = r'<='
+    GEQ = r'>='
+    DEFINE = r':='
+    ELLIPSIS = r'\.\.\.'
+
+    ADD = r'\+'
+    SUB = r'-'
+    MUL = r'\*'
+    QUO = r'/'
+    REM = r'%'
+    AND = r'&'
+    OR = r'\|'
+    XOR = r'\^'
+    LSS = r'<'
+    GTR = r'>'
+    ASSIGN = r'='
+    NOT = r'\!'
+
+    # Delimiters
+    LPAREN = r'\('
+    LBRACK = r'\['
+    LBRACE = r'{'
     COMMA = r'\,'
+    PERIOD = r'\.'
+
+    RPAREN = r'\)'
+    RBRACE = r'}'
+    SEMICOLON = r'\;'
+    COLON = r'\:'
+
+    NEWLINE = r'\n'
 
     # # Ignored pattern
     # ignore_newline = r'\n+'
@@ -141,9 +183,9 @@ class GoParser(Parser):
     tokens = GoLexer.tokens
 
     precedence = (
-        ('left', PLUS, MINUS),
-        ('left', TIMES, DIVIDE),
-        ('right', UMINUS),
+        ('left', ADD, SUB),
+        ('left', MUL, QUO),
+        ('right', USUB),
     )
 
     def __init__(self):
@@ -259,7 +301,7 @@ class GoParser(Parser):
     def comment(self, p):
         return Comment(p.COMMENT[2:].lstrip().rstrip())
 
-    @_('NAME DOT expr')
+    @_('NAME PERIOD expr')
     def expr(self, p):
         return SelectorExpr(p.NAME, p.expr)
 
@@ -358,23 +400,23 @@ class GoParser(Parser):
         else:
             return ValueSpec([p.NAME], None, [])
 
-    @_('expr PLUS expr')
+    @_('expr ADD expr')
     def expr(self, p):
         return BinaryExpr(p.expr0, '+', p.expr1)
 
-    @_('expr MINUS expr')
+    @_('expr SUB expr')
     def expr(self, p):
         return BinaryExpr(p.expr0, '-', p.expr1)
 
-    @_('expr TIMES expr')
+    @_('expr MUL expr')
     def expr(self, p):
         return BinaryExpr(p.expr0, '*', p.expr1)
 
-    @_('expr DIVIDE expr')
+    @_('expr QUO expr')
     def expr(self, p):
         return BinaryExpr(p.expr0, '/', p.expr1)
 
-    @_('MINUS expr %prec UMINUS')
+    @_('SUB expr %prec USUB')
     def expr(self, p):
         return UnaryExpr('-', p.expr)
 
