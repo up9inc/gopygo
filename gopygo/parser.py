@@ -241,9 +241,30 @@ class GoParser(Parser):
     def package(self, p):
         return Package(p.IDENT)
 
-    @_('IMPORT STRING_LITERAL')
+    @_(
+        'IMPORT STRING_LITERAL',
+        'IMPORT LPAREN _import_list NEWLINE RPAREN',
+        'IMPORT LPAREN _import_list RPAREN',
+        'IMPORT LPAREN NEWLINE _import_list NEWLINE RPAREN',
+        'IMPORT LPAREN NEWLINE _import_list RPAREN',
+    )
     def _import(self, p):
-        return ImportSpec(p.STRING_LITERAL)
+        if hasattr(p, 'STRING_LITERAL'):
+            return ImportSpec(p.STRING_LITERAL)
+        else:
+            return ImportSpec(p._import_list)
+
+    @_(
+        'STRING_LITERAL',
+        'STRING_LITERAL NEWLINE',
+        'STRING_LITERAL _import_list',
+        'STRING_LITERAL NEWLINE _import_list'
+    )
+    def _import_list(self, p):
+        if hasattr(p, '_import_list'):
+            return [p.STRING_LITERAL] + p._import_list
+        else:
+            return [p.STRING_LITERAL]
 
     @_('FUNC IDENT func_type block_stmt')
     def func(self, p):

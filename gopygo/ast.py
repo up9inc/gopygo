@@ -6,7 +6,7 @@
     :synopsis: Go AST classes.
 """
 
-from typing import List
+from typing import List, Union
 
 
 class Package():
@@ -17,7 +17,7 @@ class Package():
 
 
 class ImportSpec():
-    def __init__(self, path: str):
+    def __init__(self, path: Union[str, List[str]]):
         self.path = path
 
 

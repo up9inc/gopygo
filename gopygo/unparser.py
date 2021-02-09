@@ -40,7 +40,16 @@ class Generator():
         return text.rstrip() + '\n'
 
     def import_spec(self, node):
-        text = 'import %s\n' % node.path
+        text = 'import '
+        if isinstance(node.path, list):
+            text += '(\n'
+            self.indent += 1
+            for path in node.path:
+                text += '%s%s\n' % (self.indent * INDENT, path)
+            self.indent -= 1
+            text += ')\n'
+        else:
+            text += '%s\n' % node.path
         return text
 
     def func_decl(self, node):

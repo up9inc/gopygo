@@ -275,6 +275,15 @@ func main() {
         self.program = '\n'.join(lines)
         assert self.program == text
 
+    def test_020_import_list(self):
+        self.program = """
+import (
+    "fmt"
+    "math"
+)
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 
