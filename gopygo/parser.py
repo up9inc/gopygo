@@ -126,8 +126,8 @@ class GoLexer(Lexer):
     REM_ASSIGN = r'%='
     AND_ASSIGN = r'&='
     OR_ASSIGN = r'\|='
-    XOR_ASSIGN = r'^='
-    AND_NOT_ASSIGN = r'&^='
+    XOR_ASSIGN = r'\^='
+    AND_NOT_ASSIGN = r'&\^='
     SHL_ASSIGN = r'<<='
     SHR_ASSIGN = r'>>='
 
@@ -139,7 +139,7 @@ class GoLexer(Lexer):
     EQL = r'=='
     SHL = r'<<'
     SHR = r'>>'
-    AND_NOT = r'&^'
+    AND_NOT = r'&\^'
     NEQ = r'!='
     LEQ = r'<='
     GEQ = r'>='
@@ -190,7 +190,7 @@ class GoParser(Parser):
     precedence = (
         ('left', ADD, SUB),
         ('left', MUL, QUO),
-        ('right', USUB),
+        ('right', USUB, UXOR, UNOT),
     )
 
     def __init__(self):
@@ -324,7 +324,18 @@ class GoParser(Parser):
 
     @_(
         'expr DEFINE expr',
-        'expr ASSIGN expr'
+        'expr ASSIGN expr',
+        'expr ADD_ASSIGN expr',
+        'expr SUB_ASSIGN expr',
+        'expr MUL_ASSIGN expr',
+        'expr QUO_ASSIGN expr',
+        'expr REM_ASSIGN expr',
+        'expr AND_ASSIGN expr',
+        'expr OR_ASSIGN expr',
+        'expr XOR_ASSIGN expr',
+        'expr AND_NOT_ASSIGN expr',
+        'expr SHL_ASSIGN expr',
+        'expr SHR_ASSIGN expr',
     )
     def assign_stmt(self, p):
         return AssignStmt(p.expr0, p[1], p.expr1)
@@ -405,25 +416,49 @@ class GoParser(Parser):
         else:
             return ValueSpec([p.IDENT], None, [])
 
-    @_('expr ADD expr')
+    @_(
+        'expr LAND expr',
+        'expr LOR expr',
+        'expr ARROW expr',
+        'expr EQL expr',
+        'expr SHL expr',
+        'expr SHR expr',
+        'expr AND_NOT expr',
+        'expr NEQ expr',
+        'expr LEQ expr',
+        'expr GEQ expr',
+        'expr ADD expr',
+        'expr SUB expr',
+        'expr MUL expr',
+        'expr QUO expr',
+        'expr REM expr',
+        'expr AND expr',
+        'expr OR expr',
+        'expr XOR expr',
+        'expr LSS expr',
+        'expr GTR expr'
+    )
     def expr(self, p):
-        return BinaryExpr(p.expr0, '+', p.expr1)
+        return BinaryExpr(p.expr0, p[1], p.expr1)
 
-    @_('expr SUB expr')
+    @_(
+        'SUB expr %prec USUB',
+        'XOR expr %prec UXOR',
+        'NOT expr %prec UNOT',
+    )
     def expr(self, p):
-        return BinaryExpr(p.expr0, '-', p.expr1)
+        return UnaryExpr(p[0], p.expr)
 
-    @_('expr MUL expr')
+    @_(
+        'INC expr',
+        'expr INC',
+        'DEC expr',
+        'expr DEC'
+    )
     def expr(self, p):
-        return BinaryExpr(p.expr0, '*', p.expr1)
-
-    @_('expr QUO expr')
-    def expr(self, p):
-        return BinaryExpr(p.expr0, '/', p.expr1)
-
-    @_('SUB expr %prec USUB')
-    def expr(self, p):
-        return UnaryExpr('-', p.expr)
+        op = p.INC if hasattr(p, 'INC') else p.DEC
+        right = True if p[1] in ('++', '--') else False
+        return UnaryExpr(op, p.expr, right=right)
 
     @_('LPAREN expr RPAREN')
     def expr(self, p):

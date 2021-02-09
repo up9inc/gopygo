@@ -98,7 +98,19 @@ fmt.Sprintf("Hi, %v. Welcome!", name)
 
     def test_009_assign_stmt(self):
         self.program = """
+message = fmt.Sprintf("Hi, %v. Welcome!", name)
 message := fmt.Sprintf("Hi, %v. Welcome!", name)
+a += 3
+a -= 3
+a *= 3
+a /= 3
+a %= 3
+a &= 3
+a |= 3
+a ^= 3
+a &^= 3
+a <<= 3
+a >>= 3
 """
         self.parse_unparse()
 
@@ -135,7 +147,7 @@ var b complex64 = complex(9, 2)
 str1 := "Test"
 var ToBe bool = false
 ToBe = true
-var absoluteZero int = - 459
+var absoluteZero int = -459
 sum := 116 - 68
 var maxUint32 uint32 = 4294967295
 var pi float64
@@ -193,8 +205,32 @@ a := 3 + 5
 b := 3 - 5
 c := 3 * 5
 d := 3 / 5
-e := - 5
+d := 10 % 9
+e := -5
 f := 3 * (5 + 7)
+a := 3 + 5 + 3
+b := "go" + "lang"
+d := true && false
+c := true || false
+c := true == false
+c := a << b
+c := a >> b
+c := a &^ b
+c := a != b
+c := a >= b
+c := a <= b
+c := a & b
+c := a | b
+c := a ^ b
+c := a > b
+c := a < b
+e := d <- c
+f := ++a
+f := a++
+f := --a
+f := a--
+a := ^0011
+a := !false
 """
         self.parse_unparse()
 

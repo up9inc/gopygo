@@ -100,9 +100,10 @@ class BinaryExpr():
 
 
 class UnaryExpr():
-    def __init__(self, op: str, x):
+    def __init__(self, op: str, x, right=False):
         self.op = op
         self.x = x
+        self.right = right
 
 
 class ParenExpr():

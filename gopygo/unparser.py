@@ -161,9 +161,11 @@ class Generator():
     def unary_expr(self, node):
         x = node.x
         x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
-        return '%s %s' % (
-            node.op,
-            x
+        p1 = x if node.right else node.op
+        p2 = node.op if node.right else x
+        return '%s%s' % (
+            p1,
+            p2
         )
 
     def paren_expr(self, node):
