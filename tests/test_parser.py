@@ -284,6 +284,29 @@ import (
 """
         self.parse_unparse()
 
+    def test_021_type_support_in_field_list(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func plus(a int, b int) int {
+    return a + b
+}
+
+func plus(a float32, b float64) (rune, byte) {
+    return a + b
+}
+
+func main() {
+    res := plus(1, 2)
+    fmt.Println("1+2 =", res)
+    res = plusPlus(1, 2, 3)
+    fmt.Println("1+2+3 =", res)
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 

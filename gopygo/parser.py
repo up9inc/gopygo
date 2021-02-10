@@ -291,8 +291,8 @@ class GoParser(Parser):
             return FieldList([])
 
     @_(
-        'STRING',
-        'IDENT STRING'
+        '_type',
+        'IDENT _type'
     )
     def field(self, p):
         if len(p) == 2:
@@ -337,7 +337,7 @@ class GoParser(Parser):
 
     @_(
         'IDENT LPAREN args RPAREN',
-        'type LPAREN args RPAREN'
+        '_type LPAREN args RPAREN'
     )
     def expr(self, p):
         return CallExpr(p[0], p.args)
@@ -420,21 +420,21 @@ class GoParser(Parser):
         'COMPLEX128',
         'STRING',
     )
-    def type(self, p):
+    def _type(self, p):
         return p[0]
 
     @_(
-        'VAR IDENT COMMA value_spec type',
+        'VAR IDENT COMMA value_spec _type',
         'VAR IDENT COMMA value_spec',
-        'CONST IDENT COMMA value_spec type',
+        'CONST IDENT COMMA value_spec _type',
         'CONST IDENT COMMA value_spec',
-        'IDENT COMMA value_spec type',
+        'IDENT COMMA value_spec _type',
         'IDENT COMMA value_spec',
-        'VAR IDENT type',
+        'VAR IDENT _type',
         'VAR IDENT',
-        'CONST IDENT type',
+        'CONST IDENT _type',
         'CONST IDENT',
-        'IDENT type',
+        'IDENT _type',
         'IDENT'
     )
     def value_spec(self, p):
@@ -442,8 +442,8 @@ class GoParser(Parser):
             return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, [])
         elif len(p) > 1:
             _type = None
-            if hasattr(p, 'type'):
-                _type = p.type
+            if hasattr(p, '_type'):
+                _type = p._type
             decl = None
             if hasattr(p, 'VAR'):
                 decl = p.VAR
