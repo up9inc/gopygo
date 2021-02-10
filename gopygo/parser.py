@@ -25,7 +25,10 @@ from gopygo.ast import (
     ReturnStmt,
     BinaryExpr,
     UnaryExpr,
-    ParenExpr
+    ParenExpr,
+    ForStmt,
+    BranchStmt,
+    LabeledStmt
 )
 from gopygo.exceptions import (
     LexerError
@@ -46,6 +49,7 @@ class GoLexer(Lexer):
     tokens = {
         # Keywords
         PACKAGE, IMPORT, FUNC, RETURN, VAR, CONST,
+        FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
 
         # Data types
         BOOL,
@@ -84,6 +88,11 @@ class GoLexer(Lexer):
     RETURN = 'return'
     VAR = 'var'
     CONST = 'const'
+    FOR = 'for'
+    BREAK = 'break'
+    CONTINUE = 'continue'
+    GOTO = 'goto'
+    FALLTHROUGH = 'fallthrough'
 
     # Data types
     BOOL = 'bool'
@@ -169,8 +178,8 @@ class GoLexer(Lexer):
 
     RPAREN = r'\)'
     RBRACE = r'}'
-    SEMICOLON = r'\;'
-    COLON = r'\:'
+    SEMICOLON = r';'
+    COLON = r':'
 
     NEWLINE = r'\n'
 
@@ -346,9 +355,16 @@ class GoParser(Parser):
     def expr(self, p):
         return p.comment
 
-    @_('assign_stmt NEWLINE')
+    @_(
+        'assign_stmt NEWLINE',
+        'assign_stmt'
+    )
     def stmt(self, p):
         return p.assign_stmt
+
+    @_('for_stmt NEWLINE')
+    def stmt(self, p):
+        return p.for_stmt
 
     @_(
         'expr DEFINE expr',
@@ -369,6 +385,19 @@ class GoParser(Parser):
         return AssignStmt(p.expr0, p[1], p.expr1)
 
     @_(
+        'FOR block_stmt',
+        'FOR expr block_stmt',
+        'FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt'
+    )
+    def for_stmt(self, p):
+        if len(p) == 2:
+            return ForStmt(p.block_stmt)
+        elif len(p) == 3:
+            return ForStmt(p.block_stmt, cond=p.expr)
+        else:
+            return ForStmt(p.block_stmt, init=p.stmt0, cond=p.expr, post=p.stmt1)
+
+    @_(
         'RETURN args NEWLINE'
     )
     def stmt(self, p):
@@ -381,6 +410,24 @@ class GoParser(Parser):
     @_('value_spec NEWLINE')
     def stmt(self, p):
         return Stmt(p.value_spec)
+
+    @_(
+        'BREAK NEWLINE',
+        'CONTINUE NEWLINE',
+        'GOTO IDENT NEWLINE',
+        'FALLTHROUGH NEWLINE'
+    )
+    def stmt(self, p):
+        if hasattr(p, 'GOTO'):
+            return BranchStmt(p.GOTO, p.IDENT)
+        else:
+            return BranchStmt(p[0])
+
+    @_(
+        'IDENT COLON'
+    )
+    def stmt(self, p):
+        return LabeledStmt(p.IDENT)
 
     @_(
         '',

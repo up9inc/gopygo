@@ -10,7 +10,7 @@ class TestParser():
         self.program = None
 
     def parse_unparse(self):
-        self.program = self.program[1:]
+        self.program = self.program.lstrip()
 
         tree = parse(self.program)
         text = unparse(tree)
@@ -303,6 +303,48 @@ func main() {
     fmt.Println("1+2 =", res)
     res = plusPlus(1, 2, 3)
     fmt.Println("1+2+3 =", res)
+}
+"""
+        self.parse_unparse()
+
+    def test_022_for(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+    i := 1
+    for i <= 3 {
+        fmt.Println(i)
+        i = i + 1
+    }
+    for j := 7; j <= 9; j++ {
+        fmt.Println(j)
+    }
+    for {
+        fmt.Println("loop")
+        break
+    }
+    for n := 0; n <= 5; n++ {
+        fmt.Println(n)
+        continue
+    }
+}
+"""
+        self.parse_unparse()
+
+    def test_023_goto(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+    var a int = 10
+    MAIN_START:
+    a = 3
+    goto MAIN_START
 }
 """
         self.parse_unparse()

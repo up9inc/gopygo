@@ -92,7 +92,7 @@ class Generator():
         for stmt in node.list:
             text += getattr(self, _get_node_type(stmt))(stmt)
         self.indent -= 1
-        text += '}\n'
+        text += '%s}\n' % (self.indent * INDENT)
         return text
 
     def selector_expr(self, node):
@@ -192,6 +192,33 @@ class Generator():
         if node:
             text = text[:-2]
         return text
+
+    def for_stmt(self, node):
+        text = '%sfor ' % (self.indent * INDENT)
+        if node.init is not None:
+            text += '%s; ' % getattr(self, _get_node_type(node.init))(node.init).lstrip().rstrip()
+            text += '%s; ' % getattr(self, _get_node_type(node.cond))(node.cond)
+            text += '%s ' % getattr(self, _get_node_type(node.post))(node.post).lstrip().rstrip()
+        elif node.cond is not None:
+            text += '%s ' % getattr(self, _get_node_type(node.cond))(node.cond)
+        text += getattr(self, _get_node_type(node.body))(node.body)
+        return text
+
+    def branch_stmt(self, node):
+        text = '%s%s' % (
+            self.indent * INDENT,
+            node.tok
+        )
+        if node.label is not None:
+            text += ' %s' % (node.label)
+        text += '\n'
+        return text
+
+    def labeled_stmt(self, node):
+        return '%s%s:\n' % (
+            self.indent * INDENT,
+            node.label
+        )
 
 
 def unparse(tree):

@@ -109,3 +109,22 @@ class UnaryExpr():
 class ParenExpr():
     def __init__(self, x):
         self.x = x
+
+
+class ForStmt():
+    def __init__(self, body: BlockStmt, init=None, cond=None, post=None):
+        self.init = init
+        self.cond = cond
+        self.post = post
+        self.body = body
+
+
+class BranchStmt():
+    def __init__(self, tok: str, label=None):
+        self.tok = tok
+        self.label = label
+
+
+class LabeledStmt():
+    def __init__(self, label: str):
+        self.label = label
