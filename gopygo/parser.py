@@ -28,7 +28,8 @@ from gopygo.ast import (
     ParenExpr,
     ForStmt,
     BranchStmt,
-    LabeledStmt
+    LabeledStmt,
+    IfStmt
 )
 from gopygo.exceptions import (
     LexerError
@@ -50,6 +51,7 @@ class GoLexer(Lexer):
         # Keywords
         PACKAGE, IMPORT, FUNC, RETURN, VAR, CONST,
         FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
+        IF, ELSE,
 
         # Data types
         BOOL,
@@ -93,6 +95,8 @@ class GoLexer(Lexer):
     CONTINUE = 'continue'
     GOTO = 'goto'
     FALLTHROUGH = 'fallthrough'
+    IF = 'if'
+    ELSE = 'else'
 
     # Data types
     BOOL = 'bool'
@@ -366,6 +370,10 @@ class GoParser(Parser):
     def stmt(self, p):
         return p.for_stmt
 
+    @_('if_stmt NEWLINE')
+    def stmt(self, p):
+        return p.if_stmt
+
     @_(
         'expr DEFINE expr',
         'expr ASSIGN expr',
@@ -396,6 +404,26 @@ class GoParser(Parser):
             return ForStmt(p.block_stmt, cond=p.expr)
         else:
             return ForStmt(p.block_stmt, init=p.stmt0, cond=p.expr, post=p.stmt1)
+
+    @_(
+        'IF expr block_stmt',
+        'IF expr block_stmt ELSE block_stmt',
+        'IF expr block_stmt ELSE if_stmt',
+        'IF stmt SEMICOLON expr block_stmt',
+        'IF stmt SEMICOLON expr block_stmt ELSE block_stmt',
+        'IF stmt SEMICOLON expr block_stmt ELSE if_stmt'
+    )
+    def if_stmt(self, p):
+        init = p.stmt if hasattr(p, 'stmt') else None
+        cond = p.expr
+        body = p.block_stmt0 if hasattr(p, 'block_stmt0') else p.block_stmt
+        _else = p[-1] if hasattr(p, 'ELSE') else None
+        return IfStmt(
+            cond,
+            body,
+            init=init,
+            _else=_else
+        )
 
     @_(
         'RETURN args NEWLINE'

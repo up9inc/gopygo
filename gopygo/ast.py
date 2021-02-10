@@ -128,3 +128,11 @@ class BranchStmt():
 class LabeledStmt():
     def __init__(self, label: str):
         self.label = label
+
+
+class IfStmt():
+    def __init__(self, cond, body: BlockStmt, init=None, _else=None):
+        self.init = init
+        self.cond = cond
+        self.body = body
+        self._else = _else

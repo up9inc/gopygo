@@ -220,6 +220,17 @@ class Generator():
             node.label
         )
 
+    def if_stmt(self, node):
+        text = '%sif ' % (self.indent * INDENT)
+        if node.init is not None:
+            text += '%s; ' % getattr(self, _get_node_type(node.init))(node.init).lstrip().rstrip()
+        text += '%s ' % getattr(self, _get_node_type(node.cond))(node.cond)
+        text += getattr(self, _get_node_type(node.body))(node.body)
+        if node._else is not None:
+            text = text.rstrip()
+            text += ' else %s' % getattr(self, _get_node_type(node._else))(node._else).lstrip()
+        return text
+
 
 def unparse(tree):
     generator = Generator()
