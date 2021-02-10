@@ -29,7 +29,9 @@ from gopygo.ast import (
     ForStmt,
     BranchStmt,
     LabeledStmt,
-    IfStmt
+    IfStmt,
+    SwitchStmt,
+    CaseClause
 )
 from gopygo.exceptions import (
     LexerError
@@ -38,11 +40,14 @@ from gopygo.exceptions import (
 
 def flatten(p):
     new = []
-    for i in p:
-        if isinstance(i, tuple):
-            new += i
-        else:
-            new.append(i)
+    try:
+        for i in p:
+            if isinstance(i, tuple):
+                new += i
+            else:
+                new.append(i)
+    except TypeError:
+        new.append(p)
     return tuple(new)
 
 
@@ -52,6 +57,7 @@ class GoLexer(Lexer):
         PACKAGE, IMPORT, FUNC, RETURN, VAR, CONST,
         FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
         IF, ELSE,
+        SWITCH, CASE, DEFAULT,
 
         # Data types
         BOOL,
@@ -77,7 +83,7 @@ class GoLexer(Lexer):
 
         # Delimiters
         LPAREN, LBRACK, LBRACE, COMMA, PERIOD,
-        RPAREN, RBRACE, SEMICOLON, COLON,
+        RPAREN, RBRACK, RBRACE, SEMICOLON, COLON,
         NEWLINE,
     }
 
@@ -97,6 +103,9 @@ class GoLexer(Lexer):
     FALLTHROUGH = 'fallthrough'
     IF = 'if'
     ELSE = 'else'
+    SWITCH = 'switch'
+    CASE = 'case'
+    DEFAULT = 'DEFAULT'
 
     # Data types
     BOOL = 'bool'
@@ -181,6 +190,7 @@ class GoLexer(Lexer):
     PERIOD = r'\.'
 
     RPAREN = r'\)'
+    RBRACK = r'\]'
     RBRACE = r'}'
     SEMICOLON = r';'
     COLON = r':'
@@ -315,10 +325,25 @@ class GoParser(Parser):
 
     @_(
         'LBRACE stmts RBRACE',
-        'LBRACE NEWLINE stmts RBRACE'
+        'LBRACE NEWLINE stmts RBRACE',
+        'LBRACE case_clause_list RBRACE',
+        'LBRACE NEWLINE case_clause_list RBRACE',
     )
     def block_stmt(self, p):
-        return BlockStmt(p.stmts)
+        if hasattr(p, 'stmts'):
+            return BlockStmt(p.stmts)
+        elif hasattr(p, 'case_clause_list'):
+            return BlockStmt(p.case_clause_list)
+
+    @_(
+        'case_clause',
+        'case_clause case_clause_list',
+    )
+    def case_clause_list(self, p):
+        if len(p) > 1:
+            return [p.case_clause] + p.case_clause_list
+        else:
+            return [p.case_clause]
 
     @_(
         'stmt',
@@ -329,6 +354,8 @@ class GoParser(Parser):
         if p[0] == '\n':
             return p.stmts
         elif len(p) > 1:
+            if isinstance(p.stmt, LabeledStmt) and p.stmt.label == 'default':
+                return [CaseClause([], p.stmts)]
             return [p.stmt] + p.stmts
         else:
             return [p.stmt]
@@ -344,16 +371,29 @@ class GoParser(Parser):
     def comment(self, p):
         return Comment(p.COMMENT[2:].lstrip().rstrip())
 
-    @_('IDENT PERIOD expr')
-    def expr(self, p):
-        return SelectorExpr(p.IDENT, p.expr)
-
     @_(
-        'IDENT LPAREN args RPAREN',
-        '_type LPAREN args RPAREN'
+        'IDENT PERIOD IDENT',
+        'IDENT PERIOD call_expr'
     )
     def expr(self, p):
-        return CallExpr(p[0], p.args)
+        return SelectorExpr(p[0], p[2])
+
+    @_('call_expr')
+    def expr(self, p):
+        return p.call_expr
+
+    @_(
+        'LPAREN args RPAREN',
+        'IDENT LPAREN args RPAREN',
+        '_type LPAREN args RPAREN',
+        'LPAREN args RPAREN PERIOD call_expr',
+        'IDENT LPAREN args RPAREN PERIOD call_expr',
+        '_type LPAREN args RPAREN PERIOD call_expr',
+    )
+    def call_expr(self, p):
+        fun = p[0] if hasattr(p, 'IDENT') or hasattr(p, '_type') else ''
+        chain = p.call_expr if hasattr(p, 'call_expr') else None
+        return CallExpr(fun, p.args, chain=chain)
 
     @_('comment')
     def expr(self, p):
@@ -373,6 +413,10 @@ class GoParser(Parser):
     @_('if_stmt NEWLINE')
     def stmt(self, p):
         return p.if_stmt
+
+    @_('switch_stmt NEWLINE')
+    def stmt(self, p):
+        return p.switch_stmt
 
     @_(
         'expr DEFINE expr',
@@ -424,6 +468,44 @@ class GoParser(Parser):
             init=init,
             _else=_else
         )
+
+    @_(
+        'SWITCH block_stmt',
+        'SWITCH stmt block_stmt',
+        'SWITCH expr block_stmt',
+        'SWITCH stmt SEMICOLON expr block_stmt'
+    )
+    def switch_stmt(self, p):
+        init = p.stmt if hasattr(p, 'stmt') else None
+        tag = p.expr if hasattr(p, 'expr') else None
+        return SwitchStmt(
+            p.block_stmt,
+            init=init,
+            tag=tag
+        )
+
+    @_(
+        'CASE expr COLON NEWLINE stmts',
+        'CASE _type_list COLON NEWLINE stmts',
+        'DEFAULT COLON NEWLINE stmts',
+    )
+    def case_clause(self, p):
+        expr = p.expr if hasattr(p, 'expr') else []
+        _type_list = p._type_list if hasattr(p, '_type_list') else []
+        expr = [expr] if not isinstance(expr, list) else expr
+        _type_list = [_type_list] if not isinstance(_type_list, list) else _type_list
+        expr += _type_list
+        return CaseClause(expr, p.stmts)
+
+    @_(
+        '_type',
+        '_type COMMA _type_list',
+    )
+    def _type_list(self, p):
+        if len(p) > 1:
+            return [p._type] + p._type_list
+        else:
+            return [p._type]
 
     @_(
         'RETURN args NEWLINE'
@@ -576,10 +658,6 @@ class GoParser(Parser):
     def expr(self, p):
         return ParenExpr(p.expr)
 
-    @_('expr COMMA expr')
-    def expr(self, p):
-        return [p.expr0] + list(flatten(p.expr1))
-
     @_('IMAG_LITERAL')
     def expr(self, p):
         return p.IMAG_LITERAL
@@ -608,9 +686,13 @@ class GoParser(Parser):
     def expr(self, p):
         return p.FALSE
 
+    @_('expr COMMA expr')
+    def expr(self, p):
+        return [p.expr0] + list(flatten(p.expr1))
+
 
 lexer = GoLexer()
 parser = GoParser()
 
 def parse(text):
-    return parser.parse(lexer.tokenize(text.lstrip()))
+    return parser.parse(lexer.tokenize(text.lstrip().rstrip() + '\n'))

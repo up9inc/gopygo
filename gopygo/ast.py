@@ -57,9 +57,10 @@ class SelectorExpr():
 
 
 class CallExpr():
-    def __init__(self, fun: str, args: list):
+    def __init__(self, fun: str, args: list, chain=None):
         self.fun = fun
         self.args = args
+        self.chain = chain  # TODO: Is that correct to have this in here?
 
 
 class ValueSpec():
@@ -136,3 +137,16 @@ class IfStmt():
         self.cond = cond
         self.body = body
         self._else = _else
+
+
+class SwitchStmt():
+    def __init__(self, body: BlockStmt, init=None, tag=None):
+        self.init = init
+        self.tag = tag
+        self.body = body
+
+
+class CaseClause():
+    def __init__(self, _list: list, body: list):
+        self.list = _list
+        self.body = body

@@ -109,6 +109,8 @@ class Generator():
         if node.args:
             text = text[:-2]
         text += ')'
+        if node.chain:
+            text += '.%s' % getattr(self, _get_node_type(node.chain))(node.chain)
         return text
 
     def value_spec(self, node):
@@ -229,6 +231,32 @@ class Generator():
         if node._else is not None:
             text = text.rstrip()
             text += ' else %s' % getattr(self, _get_node_type(node._else))(node._else).lstrip()
+        return text
+
+    def switch_stmt(self, node):
+        text = '%sswitch ' % (self.indent * INDENT)
+        if node.init is not None:
+            text += '%s ' % getattr(self, _get_node_type(node.init))(node.init).lstrip().rstrip()
+        if node.tag is not None:
+            if node.init is not None:
+                text = '%s; ' % text.rstrip()
+            text += '%s ' % getattr(self, _get_node_type(node.tag))(node.tag)
+        text += getattr(self, _get_node_type(node.body))(node.body)
+        return text
+
+    def case_clause(self, node):
+        keyword = 'case ' if node.list else 'default'
+        text = '%s%s' % (
+            (self.indent - 1) * INDENT,
+            keyword
+        )
+        for el in node.list:
+            text += '%s, ' % getattr(self, _get_node_type(el))(el)
+        if node.list:
+            text = text[:-2]
+        text += ':\n'
+        for el in node.body:
+            text += getattr(self, _get_node_type(el))(el)
         return text
 
 
