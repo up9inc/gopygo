@@ -123,21 +123,18 @@ class Generator():
 
     def value_spec(self, node):
         text = ''
-        if node.decl is not None:
-            text += '%s ' % node.decl
-        elif node.type is not None and node.names:
-            text += 'var '
-
         for name in node.names:
             text += '%s, ' % name
         if node.names:
             text = text[:-2]
-        # for value in node.values:
-        #     text += '%s, ' % value
-        # if node.values:
-        #     text = text[:-2]
         if node.type is not None:
             text += ' %s' % getattr(self, _get_node_type(node.type))(node.type)
+        if node.values:
+            text += ' = '
+        for value in node.values:
+            text += '%s, ' % getattr(self, _get_node_type(value))(value)
+        if node.values:
+            text = text[:-2]
         return text
 
     def comment(self, node):
@@ -296,6 +293,21 @@ class Generator():
             getattr(self, _get_node_type(node.type))(node.type),
             getattr(self, _get_node_type(node.elts))(node.elts)
         )
+
+    def decl_stmt(self, node):
+        return getattr(self, _get_node_type(node.decl))(node.decl)
+
+    def gen_decl(self, node):
+        text = '%s%s ' % (
+            self.indent * INDENT,
+            node.tok
+        )
+        for spec in node.specs:
+            text += getattr(self, _get_node_type(spec))(spec)
+        return text + '\n'
+
+    def ident(self, node):
+        return node.name
 
 
 def unparse(tree):

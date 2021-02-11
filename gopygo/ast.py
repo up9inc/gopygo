@@ -9,6 +9,11 @@
 from typing import List, Union
 
 
+class Ident():
+    def __init__(self, name: str):
+        self.name = name
+
+
 class BasicLit():
     def __init__(self, kind, value: Union[str, None]):
         self.kind = kind
@@ -20,6 +25,17 @@ class CompositeLit():
         self.type = _type
         self.elts = elts
         self.incomplete = incomplete
+
+
+class GenDecl():
+    def __init__(self, tok: str, specs: list):
+        self.tok = tok
+        self.specs = specs
+
+
+class DeclStmt():
+    def __init__(self, decl: GenDecl):
+        self.decl = decl
 
 
 class Package():
@@ -88,11 +104,10 @@ class ArrayType():
 
 
 class ValueSpec():
-    def __init__(self, names: list, _type: Union[str, ArrayType], values: list, decl=None):
+    def __init__(self, names: list, _type: Union[str, ArrayType], values: list):
         self.names = names
         self.type = _type
         self.values = values
-        self.decl = decl
 
 
 class Comment():

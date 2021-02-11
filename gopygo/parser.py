@@ -9,8 +9,11 @@
 from sly import Lexer, Parser
 
 from gopygo.ast import (
+    Ident,
     BasicLit,
     CompositeLit,
+    GenDecl,
+    DeclStmt,
     Package,
     File,
     ImportSpec,
@@ -59,7 +62,8 @@ def flatten(p):
 class GoLexer(Lexer):
     tokens = {
         # Keywords
-        PACKAGE, IMPORT, FUNC, RETURN, VAR, CONST,
+        PACKAGE, FUNC, RETURN,
+        IMPORT, VAR, CONST, TYPE,
         FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
         IF, ELSE,
         SWITCH, CASE, DEFAULT,
@@ -96,11 +100,12 @@ class GoLexer(Lexer):
 
     # Keywords
     PACKAGE = 'package'
-    IMPORT = 'import'
     FUNC = 'func'
     RETURN = 'return'
+    IMPORT = 'import'
     VAR = 'var'
     CONST = 'const'
+    TYPE = 'type'
     FOR = 'for'
     BREAK = 'break'
     CONTINUE = 'continue'
@@ -518,13 +523,19 @@ class GoParser(Parser):
     def stmt(self, p):
         return ReturnStmt(p.args)
 
-    @_('value_spec')
-    def expr(self, p):
-        return p.value_spec
-
-    @_('value_spec NEWLINE')
+    @_(
+        'VAR value_spec NEWLINE',
+        'CONST value_spec NEWLINE',
+        'IMPORT value_spec NEWLINE',
+        'TYPE value_spec NEWLINE',
+    )
     def stmt(self, p):
-        return ExprStmt(p.value_spec)
+        return DeclStmt(
+            GenDecl(
+                p[0],
+                [p.value_spec]
+            )
+        )
 
     @_(
         'BREAK NEWLINE',
@@ -546,12 +557,10 @@ class GoParser(Parser):
 
     @_(
         '',
-        'value_spec',
-        'IDENT',
         'expr',
-        'value_spec COMMA args',
+        'TYPE',
         'expr COMMA args',
-        'IDENT COMMA args'
+        'TYPE COMMA args',
     )
     def args(self, p):
         if len(p) > 2:
@@ -586,27 +595,28 @@ class GoParser(Parser):
         return p[0]
 
     @_(
-        'VAR IDENT COMMA value_spec array_type',
-        'VAR IDENT COMMA value_spec _type',
-        'VAR IDENT COMMA value_spec',
-        'CONST IDENT COMMA value_spec array_type',
-        'CONST IDENT COMMA value_spec _type',
-        'CONST IDENT COMMA value_spec',
+        'IDENT COMMA value_spec array_type ASSIGN expr',
+        'IDENT COMMA value_spec _type ASSIGN expr',
+        'IDENT COMMA value_spec ASSIGN expr',
+        'IDENT array_type ASSIGN expr',
+        'IDENT _type ASSIGN expr',
+        'IDENT ASSIGN expr',
         'IDENT COMMA value_spec array_type',
         'IDENT COMMA value_spec _type',
         'IDENT COMMA value_spec',
-        'VAR IDENT array_type',
-        'VAR IDENT _type',
-        'VAR IDENT',
-        'CONST IDENT array_type',
-        'CONST IDENT _type',
-        'CONST IDENT',
+        'IDENT array_type',
         'IDENT _type',
-        'IDENT'
+        'IDENT',
     )
     def value_spec(self, p):
+        values = []
+        if hasattr(p, 'ASSIGN'):
+            values = p.expr
+        values = [values] if not isinstance(values, list) else values
+
         if hasattr(p, 'value_spec'):
-            return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, [])
+            values += p.value_spec.values
+            return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, values)
         elif len(p) > 1:
             _type = None
             if hasattr(p, 'array_type'):
@@ -618,9 +628,9 @@ class GoParser(Parser):
                 decl = p.VAR
             elif hasattr(p, 'CONST'):
                 decl = p.CONST
-            return ValueSpec([p.IDENT], _type, [], decl=decl)
+            return ValueSpec([p.IDENT], _type, values)
         else:
-            return ValueSpec([p.IDENT], None, [])
+            return ValueSpec([p.IDENT], None, values)
 
     @_(
         'LBRACK expr RBRACK _type'
@@ -629,17 +639,17 @@ class GoParser(Parser):
         return ArrayType(p.expr, p._type)
 
     @_(
+        'expr LBRACK expr RBRACK'
+    )
+    def expr(self, p):
+        return IndexExpr(p.expr0, p.expr1)
+
+    @_(
         'array_type LBRACE expr RBRACE'
     )
     def expr(self, p):
         expr = p.expr if isinstance(p.expr, list) else [p.expr]
         return CompositeLit(p.array_type, expr, False)
-
-    @_(
-        'expr LBRACK expr RBRACK'
-    )
-    def expr(self, p):
-        return IndexExpr(p.expr0, p.expr1)
 
     @_(
         'expr LAND expr',
@@ -720,6 +730,10 @@ class GoParser(Parser):
     @_('expr COMMA expr')
     def expr(self, p):
         return [p.expr0] + list(flatten(p.expr1))
+
+    @_('IDENT')
+    def expr(self, p):
+        return Ident(p.IDENT)
 
 
 lexer = GoLexer()
