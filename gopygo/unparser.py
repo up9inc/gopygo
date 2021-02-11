@@ -105,20 +105,18 @@ class Generator():
 
     def selector_expr(self, node):
         text = '%s.%s' % (
-            node.x,
+            getattr(self, _get_node_type(node.x))(node.x),
             getattr(self, _get_node_type(node.sel))(node.sel)
         )
         return text
 
     def call_expr(self, node):
-        text = '%s(' % node.fun
+        text = '%s(' % getattr(self, _get_node_type(node.fun))(node.fun)
         for arg in node.args:
             text += '%s, ' % getattr(self, _get_node_type(arg))(arg)
         if node.args:
             text = text[:-2]
         text += ')'
-        if node.chain:
-            text += '.%s' % getattr(self, _get_node_type(node.chain))(node.chain)
         return text
 
     def value_spec(self, node):
@@ -308,6 +306,13 @@ class Generator():
 
     def ident(self, node):
         return node.name
+
+    def type_assert_expr(self, node):
+        _type = 'type' if node.type is None else getattr(self, _get_node_type(node.type))(node.type)
+        return '%s.(%s)' % (
+            getattr(self, _get_node_type(node.x))(node.x),
+            _type
+        )
 
 
 def unparse(tree):

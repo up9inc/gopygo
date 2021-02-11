@@ -94,7 +94,6 @@ class CallExpr():
     def __init__(self, fun: str, args: list, chain=None):
         self.fun = fun
         self.args = args
-        self.chain = chain  # TODO: Is that correct to have this in here?
 
 
 class ArrayType():
@@ -195,3 +194,9 @@ class IndexExpr():
     def __init__(self, x, index):
         self.x = x
         self.index = index
+
+
+class TypeAssertExpr():
+    def __init__(self, x, _type):
+        self.x = x
+        self.type = _type

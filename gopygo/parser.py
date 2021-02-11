@@ -39,7 +39,8 @@ from gopygo.ast import (
     SwitchStmt,
     CaseClause,
     ArrayType,
-    IndexExpr
+    IndexExpr,
+    TypeAssertExpr
 )
 from gopygo.exceptions import (
     LexerError
@@ -381,29 +382,39 @@ class GoParser(Parser):
     def comment(self, p):
         return Comment(p.COMMENT[2:].lstrip().rstrip())
 
-    @_(
-        'IDENT PERIOD IDENT',
-        'IDENT PERIOD call_expr'
-    )
-    def expr(self, p):
-        return SelectorExpr(p[0], p[2])
-
     @_('call_expr')
     def expr(self, p):
         return p.call_expr
 
     @_(
-        'LPAREN args RPAREN',
+        'selector_expr LPAREN args RPAREN',
         'IDENT LPAREN args RPAREN',
         '_type LPAREN args RPAREN',
-        'LPAREN args RPAREN PERIOD call_expr',
-        'IDENT LPAREN args RPAREN PERIOD call_expr',
-        '_type LPAREN args RPAREN PERIOD call_expr',
     )
     def call_expr(self, p):
-        fun = p[0] if hasattr(p, 'IDENT') or hasattr(p, '_type') else ''
-        chain = p.call_expr if hasattr(p, 'call_expr') else None
-        return CallExpr(fun, p.args, chain=chain)
+        return CallExpr(p[0], p.args)
+
+    @_('selector_expr')
+    def expr(self, p):
+        return p.selector_expr
+
+    @_(
+        'IDENT PERIOD IDENT',
+        'selector_expr PERIOD IDENT',
+        'call_expr PERIOD IDENT'
+    )
+    def selector_expr(self, p):
+        return SelectorExpr(p[0], p[2])
+
+    @_(
+        'IDENT PERIOD LPAREN expr RPAREN',
+        'IDENT PERIOD LPAREN TYPE RPAREN',
+        'expr PERIOD LPAREN expr RPAREN',
+        'expr PERIOD LPAREN TYPE RPAREN',
+    )
+    def expr(self, p):
+        _type = p[3] if p[3] != GoLexer.TYPE else None
+        return TypeAssertExpr(p[0], p[3])
 
     @_('comment')
     def expr(self, p):
