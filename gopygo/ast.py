@@ -63,8 +63,14 @@ class CallExpr():
         self.chain = chain  # TODO: Is that correct to have this in here?
 
 
+class ArrayType():
+    def __init__(self, _len, elt: str):
+        self.len = _len
+        self.elt = elt
+
+
 class ValueSpec():
-    def __init__(self, names: list, _type: str, values: list, decl=None):
+    def __init__(self, names: list, _type: Union[str, ArrayType], values: list, decl=None):
         self.names = names
         self.type = _type
         self.values = values
@@ -150,3 +156,9 @@ class CaseClause():
     def __init__(self, _list: list, body: list):
         self.list = _list
         self.body = body
+
+
+class IndexExpr():
+    def __init__(self, x, index):
+        self.x = x
+        self.index = index

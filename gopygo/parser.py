@@ -31,7 +31,9 @@ from gopygo.ast import (
     LabeledStmt,
     IfStmt,
     SwitchStmt,
-    CaseClause
+    CaseClause,
+    ArrayType,
+    IndexExpr
 )
 from gopygo.exceptions import (
     LexerError
@@ -581,14 +583,19 @@ class GoParser(Parser):
         return p[0]
 
     @_(
+        'VAR IDENT COMMA value_spec array_type',
         'VAR IDENT COMMA value_spec _type',
         'VAR IDENT COMMA value_spec',
+        'CONST IDENT COMMA value_spec array_type',
         'CONST IDENT COMMA value_spec _type',
         'CONST IDENT COMMA value_spec',
+        'IDENT COMMA value_spec array_type',
         'IDENT COMMA value_spec _type',
         'IDENT COMMA value_spec',
+        'VAR IDENT array_type',
         'VAR IDENT _type',
         'VAR IDENT',
+        'CONST IDENT array_type',
         'CONST IDENT _type',
         'CONST IDENT',
         'IDENT _type',
@@ -599,7 +606,9 @@ class GoParser(Parser):
             return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, [])
         elif len(p) > 1:
             _type = None
-            if hasattr(p, '_type'):
+            if hasattr(p, 'array_type'):
+                _type = p.array_type
+            elif hasattr(p, '_type'):
                 _type = p._type
             decl = None
             if hasattr(p, 'VAR'):
@@ -609,6 +618,18 @@ class GoParser(Parser):
             return ValueSpec([p.IDENT], _type, [], decl=decl)
         else:
             return ValueSpec([p.IDENT], None, [])
+
+    @_(
+        'LBRACK expr RBRACK _type'
+    )
+    def array_type(self, p):
+        return ArrayType(p.expr, p._type)
+
+    @_(
+        'expr LBRACK expr RBRACK'
+    )
+    def expr(self, p):
+        return IndexExpr(p.expr0, p.expr1)
 
     @_(
         'expr LAND expr',

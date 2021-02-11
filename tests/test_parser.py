@@ -427,6 +427,23 @@ func main() {
 """
         self.parse_unparse()
 
+    def test_024_arrays(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func main() {
+    var a [5]int
+    fmt.Println("emp:", a)
+    a[4] = 100
+    fmt.Println("set:", a)
+    fmt.Println("get:", a[4])
+    fmt.Println("len:", len(a))
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 

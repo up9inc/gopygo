@@ -129,7 +129,7 @@ class Generator():
         # if node.values:
         #     text = text[:-2]
         if node.type is not None:
-            text += ' %s' % node.type
+            text += ' %s' % getattr(self, _get_node_type(node.type))(node.type)
         return text
 
     def comment(self, node):
@@ -258,6 +258,18 @@ class Generator():
         for el in node.body:
             text += getattr(self, _get_node_type(el))(el)
         return text
+
+    def array_type(self, node):
+        return '[%s]%s' % (
+            getattr(self, _get_node_type(node.len))(node.len),
+            node.elt
+        )
+
+    def index_expr(self, node):
+        return '%s[%s]' % (
+            getattr(self, _get_node_type(node.x))(node.x),
+            getattr(self, _get_node_type(node.index))(node.index)
+        )
 
 
 def unparse(tree):
