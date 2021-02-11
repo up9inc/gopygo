@@ -9,7 +9,9 @@
 from sly import Lexer, Parser
 
 from gopygo.ast import (
+    BasicLit,
     Package,
+    File,
     ImportSpec,
     FuncDecl,
     FuncType,
@@ -246,14 +248,14 @@ class GoParser(Parser):
     )
     def line(self, p):
         if isinstance(p[0], Package):
-            package = p[0]
+            file = File(p[0])
             if len(p) > 2:
                 for i in p.line:
                     if isinstance(i, ImportSpec):
-                        package.imports.append(i)
+                        file.imports.append(i)
                     else:
-                        package.decls.append(i)
-            return package
+                        file.decls.append(i)
+            return file
         else:
             if isinstance(p[0], Comment):
                 p[0].text += '\n'
@@ -275,7 +277,7 @@ class GoParser(Parser):
     )
     def _import(self, p):
         if hasattr(p, 'STRING_LITERAL'):
-            return ImportSpec(p.STRING_LITERAL)
+            return ImportSpec(BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1]))
         else:
             return ImportSpec(p._import_list)
 
@@ -287,9 +289,9 @@ class GoParser(Parser):
     )
     def _import_list(self, p):
         if hasattr(p, '_import_list'):
-            return [p.STRING_LITERAL] + p._import_list
+            return [BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])] + p._import_list
         else:
-            return [p.STRING_LITERAL]
+            return [BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])]
 
     @_('FUNC IDENT func_type block_stmt')
     def func(self, p):
@@ -681,31 +683,31 @@ class GoParser(Parser):
 
     @_('IMAG_LITERAL')
     def expr(self, p):
-        return p.IMAG_LITERAL
+        return BasicLit(GoLexer.IMAG_LITERAL, p.IMAG_LITERAL)
 
     @_('FLOAT_LITERAL')
     def expr(self, p):
-        return p.FLOAT_LITERAL
+        return BasicLit(GoLexer.FLOAT_LITERAL, p.FLOAT_LITERAL)
 
     @_('INT_LITERAL')
     def expr(self, p):
-        return p.INT_LITERAL
+        return BasicLit(GoLexer.INT_LITERAL, p.INT_LITERAL)
 
     @_('CHAR_LITERAL')
     def expr(self, p):
-        return p.CHAR_LITERAL
+        return BasicLit(GoLexer.CHAR_LITERAL, p.CHAR_LITERAL[1:-1])
 
     @_('STRING_LITERAL')
     def expr(self, p):
-        return p.STRING_LITERAL
+        return BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])
 
     @_('TRUE')
     def expr(self, p):
-        return p.TRUE
+        return BasicLit(GoLexer.TRUE, None)
 
     @_('FALSE')
     def expr(self, p):
-        return p.FALSE
+        return BasicLit(GoLexer.FALSE, None)
 
     @_('expr COMMA expr')
     def expr(self, p):

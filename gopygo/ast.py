@@ -9,15 +9,26 @@
 from typing import List, Union
 
 
+class BasicLit():
+    def __init__(self, kind, value: Union[str, None]):
+        self.kind = kind
+        self.value = value
+
+
 class Package():
     def __init__(self, name: str):
+        self.name = name
+
+
+class File():
+    def __init__(self, name: Package):
         self.name = name
         self.imports = []
         self.decls = []
 
 
 class ImportSpec():
-    def __init__(self, path: Union[str, List[str]]):
+    def __init__(self, path: Union[BasicLit, List[BasicLit]]):
         self.path = path
 
 

@@ -8,6 +8,8 @@
 
 import re
 
+from gopygo.parser import GoLexer
+
 INDENT = '    '
 
 camel_to_snake_pattern = re.compile(r'(?<!^)(?=[A-Z])')
@@ -25,8 +27,8 @@ class Generator():
     def __init__(self):
         self.indent = 0
 
-    def package(self, node):
-        text = 'package %s\n' % node.name
+    def file(self, node):
+        text = getattr(self, _get_node_type(node.name))(node.name)
 
         if node.imports:
             text += '\n'
@@ -39,17 +41,23 @@ class Generator():
             text += getattr(self, _get_node_type(decl))(decl)
         return text.rstrip() + '\n'
 
+    def package(self, node):
+        return 'package %s\n' % node.name
+
     def import_spec(self, node):
         text = 'import '
         if isinstance(node.path, list):
             text += '(\n'
             self.indent += 1
             for path in node.path:
-                text += '%s%s\n' % (self.indent * INDENT, path)
+                text += '%s%s\n' % (
+                    self.indent * INDENT,
+                    getattr(self, _get_node_type(path))(path)
+                )
             self.indent -= 1
             text += ')\n'
         else:
-            text += '%s\n' % node.path
+            text += '%s\n' % getattr(self, _get_node_type(node.path))(node.path)
         return text
 
     def func_decl(self, node):
@@ -190,7 +198,7 @@ class Generator():
     def list(self, node):
         text = ''
         for el in node:
-            text += '%s, ' % el
+            text += '%s, ' % getattr(self, _get_node_type(el))(el)
         if node:
             text = text[:-2]
         return text
@@ -270,6 +278,18 @@ class Generator():
             getattr(self, _get_node_type(node.x))(node.x),
             getattr(self, _get_node_type(node.index))(node.index)
         )
+
+    def basic_lit(self, node):
+        if node.kind == GoLexer.STRING_LITERAL:
+            return '"%s"' % node.value
+        elif node.kind == GoLexer.CHAR_LITERAL:
+            return '\'%s\'' % node.value
+        elif node.kind == GoLexer.TRUE:
+            return 'true'
+        elif node.kind == GoLexer.FALSE:
+            return 'false'
+        else:
+            return node.value
 
 
 def unparse(tree):
