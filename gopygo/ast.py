@@ -200,3 +200,12 @@ class TypeAssertExpr():
     def __init__(self, x, _type):
         self.x = x
         self.type = _type
+
+
+class SliceExpr():
+    def __init__(self, x, low, high, _max, slice3: bool):
+        self.x = x
+        self.low = low
+        self.high = high
+        self.max = _max
+        self.slice3 = slice3

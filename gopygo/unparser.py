@@ -314,6 +314,19 @@ class Generator():
             _type
         )
 
+    def slice_expr(self, node):
+        low = node.low if node.low is not None else ''
+        high = node.high if node.high is not None else ''
+        text = '%s[%s:%s' % (
+            getattr(self, _get_node_type(node.x))(node.x),
+            getattr(self, _get_node_type(low))(low),
+            getattr(self, _get_node_type(high))(high)
+        )
+        if node.slice3:
+            _max = node.max if node.max is not None else ''
+            text += ':%s' % getattr(self, _get_node_type(_max))(_max)
+        return text + ']'
+
 
 def unparse(tree):
     generator = Generator()

@@ -40,7 +40,8 @@ from gopygo.ast import (
     CaseClause,
     ArrayType,
     IndexExpr,
-    TypeAssertExpr
+    TypeAssertExpr,
+    SliceExpr
 )
 from gopygo.exceptions import (
     LexerError
@@ -637,10 +638,13 @@ class GoParser(Parser):
 
     @_(
         'LBRACK expr RBRACK _type',
-        'LBRACK expr RBRACK array_type'
+        'LBRACK expr RBRACK array_type',
+        'LBRACK RBRACK _type',
+        'LBRACK RBRACK array_type',
     )
     def array_type(self, p):
-        return ArrayType(p.expr, p[-1])
+        _len = p.expr if hasattr(p, 'expr') else ''
+        return ArrayType(_len, p[-1])
 
     @_(
         'expr LBRACK expr RBRACK'
@@ -649,11 +653,34 @@ class GoParser(Parser):
         return IndexExpr(p.expr0, p.expr1)
 
     @_(
+        'expr LBRACK COLON expr RBRACK',
+        'expr LBRACK expr COLON RBRACK',
+        'expr LBRACK expr COLON expr RBRACK',
+        'expr LBRACK expr COLON expr COLON expr RBRACK'
+    )
+    def expr(self, p):
+        if len(p) == 5:
+            if p[2] == GoLexer.COLON:
+                return SliceExpr(p.expr0, None, p.expr1, None, False)
+            else:
+                return SliceExpr(p.expr0, p.expr1, None, None, False)
+        if hasattr(p, 'expr3'):
+            return SliceExpr(p.expr0, p.expr1, p.expr2, p.expr3, True)
+        else:
+            return SliceExpr(p.expr0, p.expr1, p.expr2, None, False)
+
+    @_(
         'array_type LBRACE expr RBRACE'
     )
     def expr(self, p):
         expr = p.expr if isinstance(p.expr, list) else [p.expr]
         return CompositeLit(p.array_type, expr, False)
+
+    @_(
+        'array_type'
+    )
+    def expr(self, p):
+        return p.array_type
 
     @_(
         'expr LAND expr',
