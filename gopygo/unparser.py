@@ -267,7 +267,7 @@ class Generator():
     def array_type(self, node):
         return '[%s]%s' % (
             getattr(self, _get_node_type(node.len))(node.len),
-            node.elt
+            getattr(self, _get_node_type(node.elt))(node.elt)
         )
 
     def index_expr(self, node):

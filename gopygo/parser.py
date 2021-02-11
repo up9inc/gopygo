@@ -606,7 +606,6 @@ class GoParser(Parser):
         'IDENT COMMA value_spec',
         'IDENT array_type',
         'IDENT _type',
-        'IDENT',
     )
     def value_spec(self, p):
         values = []
@@ -617,26 +616,20 @@ class GoParser(Parser):
         if hasattr(p, 'value_spec'):
             values += p.value_spec.values
             return ValueSpec([p.IDENT] + p.value_spec.names, p.value_spec.type, values)
-        elif len(p) > 1:
+        else:
             _type = None
             if hasattr(p, 'array_type'):
                 _type = p.array_type
             elif hasattr(p, '_type'):
                 _type = p._type
-            decl = None
-            if hasattr(p, 'VAR'):
-                decl = p.VAR
-            elif hasattr(p, 'CONST'):
-                decl = p.CONST
             return ValueSpec([p.IDENT], _type, values)
-        else:
-            return ValueSpec([p.IDENT], None, values)
 
     @_(
-        'LBRACK expr RBRACK _type'
+        'LBRACK expr RBRACK _type',
+        'LBRACK expr RBRACK array_type'
     )
     def array_type(self, p):
-        return ArrayType(p.expr, p._type)
+        return ArrayType(p.expr, p[-1])
 
     @_(
         'expr LBRACK expr RBRACK'
