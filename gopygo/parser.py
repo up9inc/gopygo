@@ -22,7 +22,7 @@ from gopygo.ast import (
     CallExpr,
     ValueSpec,
     Comment,
-    Stmt,
+    ExprStmt,
     AssignStmt,
     ReturnStmt,
     BinaryExpr,
@@ -369,7 +369,7 @@ class GoParser(Parser):
         'expr NEWLINE'
     )
     def stmt(self, p):
-        return Stmt(p.expr)
+        return ExprStmt(p.expr)
 
     @_('COMMENT')
     def comment(self, p):
@@ -523,7 +523,7 @@ class GoParser(Parser):
 
     @_('value_spec NEWLINE')
     def stmt(self, p):
-        return Stmt(p.value_spec)
+        return ExprStmt(p.value_spec)
 
     @_(
         'BREAK NEWLINE',

@@ -146,7 +146,7 @@ class Generator():
     def str(self, node):
         return node
 
-    def stmt(self, node):
+    def expr_stmt(self, node):
         return '%s%s\n' % (
             self.indent * INDENT,
             getattr(self, _get_node_type(node.expr))(node.expr)

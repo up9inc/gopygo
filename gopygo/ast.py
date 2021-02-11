@@ -93,7 +93,7 @@ class Comment():
         self.text = text
 
 
-class Stmt():
+class ExprStmt():
     def __init__(self, expr):
         self.expr = expr
 
