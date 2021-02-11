@@ -10,6 +10,7 @@ from sly import Lexer, Parser
 
 from gopygo.ast import (
     BasicLit,
+    CompositeLit,
     Package,
     File,
     ImportSpec,
@@ -626,6 +627,13 @@ class GoParser(Parser):
     )
     def array_type(self, p):
         return ArrayType(p.expr, p._type)
+
+    @_(
+        'array_type LBRACE expr RBRACE'
+    )
+    def expr(self, p):
+        expr = p.expr if isinstance(p.expr, list) else [p.expr]
+        return CompositeLit(p.array_type, expr, False)
 
     @_(
         'expr LBRACK expr RBRACK'

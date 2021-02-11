@@ -15,6 +15,13 @@ class BasicLit():
         self.value = value
 
 
+class CompositeLit():
+    def __init__(self, _type, elts: list, incomplete: bool):
+        self.type = _type
+        self.elts = elts
+        self.incomplete = incomplete
+
+
 class Package():
     def __init__(self, name: str):
         self.name = name

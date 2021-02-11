@@ -197,8 +197,8 @@ class Generator():
 
     def list(self, node):
         text = ''
-        for el in node:
-            text += '%s, ' % getattr(self, _get_node_type(el))(el)
+        for elt in node:
+            text += '%s, ' % getattr(self, _get_node_type(elt))(elt)
         if node:
             text = text[:-2]
         return text
@@ -258,13 +258,13 @@ class Generator():
             (self.indent - 1) * INDENT,
             keyword
         )
-        for el in node.list:
-            text += '%s, ' % getattr(self, _get_node_type(el))(el)
+        for elt in node.list:
+            text += '%s, ' % getattr(self, _get_node_type(elt))(elt)
         if node.list:
             text = text[:-2]
         text += ':\n'
-        for el in node.body:
-            text += getattr(self, _get_node_type(el))(el)
+        for elt in node.body:
+            text += getattr(self, _get_node_type(elt))(elt)
         return text
 
     def array_type(self, node):
@@ -291,13 +291,19 @@ class Generator():
         else:
             return node.value
 
+    def composite_lit(self, node):
+        return '%s{%s}' % (
+            getattr(self, _get_node_type(node.type))(node.type),
+            getattr(self, _get_node_type(node.elts))(node.elts)
+        )
+
 
 def unparse(tree):
     generator = Generator()
     if isinstance(tree, (tuple, list)):
         result = ''
-        for el in tree:
-            result += getattr(generator, _get_node_type(el))(el).rstrip() + '\n'
+        for elt in tree:
+            result += getattr(generator, _get_node_type(elt))(elt).rstrip() + '\n'
         return result
     else:
         return getattr(generator, _get_node_type(tree))(tree).rstrip() + '\n'
