@@ -43,7 +43,8 @@ from gopygo.ast import (
     TypeAssertExpr,
     SliceExpr,
     MapType,
-    KeyValueExpr
+    KeyValueExpr,
+    RangeStmt
 )
 from gopygo.exceptions import (
     LexerError
@@ -69,7 +70,7 @@ class GoLexer(Lexer):
         # Keywords
         PACKAGE, FUNC, RETURN,
         IMPORT, VAR, CONST, TYPE,
-        FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
+        FOR, RANGE, BREAK, CONTINUE, GOTO, FALLTHROUGH,
         IF, ELSE,
         SWITCH, CASE, DEFAULT,
         MAP,
@@ -113,6 +114,7 @@ class GoLexer(Lexer):
     CONST = 'const'
     TYPE = 'type'
     FOR = 'for'
+    RANGE = 'range'
     BREAK = 'break'
     CONTINUE = 'continue'
     GOTO = 'goto'
@@ -437,6 +439,10 @@ class GoParser(Parser):
     def stmt(self, p):
         return p.for_stmt
 
+    @_('range_stmt NEWLINE')
+    def stmt(self, p):
+        return p.range_stmt
+
     @_('if_stmt NEWLINE')
     def stmt(self, p):
         return p.if_stmt
@@ -475,6 +481,28 @@ class GoParser(Parser):
             return ForStmt(p.block_stmt, cond=p.expr)
         else:
             return ForStmt(p.block_stmt, init=p.stmt0, cond=p.expr, post=p.stmt1)
+
+    @_(
+        'FOR RANGE expr block_stmt',
+        'FOR expr DEFINE RANGE expr block_stmt',
+        'FOR expr COMMA expr DEFINE RANGE expr block_stmt',
+        'FOR expr ASSIGN RANGE expr block_stmt',
+        'FOR expr COMMA expr ASSIGN RANGE expr block_stmt',
+    )
+    def range_stmt(self, p):
+        tok = Token.ILLEGAL
+        if hasattr(p, 'DEFINE'):
+            tok = p.DEFINE
+        elif hasattr(p, 'ASSIGN'):
+            tok = p.ASSIGN
+
+        if tok == Token.ILLEGAL:
+            return RangeStmt(None, None, tok, p.expr, p.block_stmt)
+
+        if hasattr(p, 'COMMA'):
+            return RangeStmt(p.expr0, p.expr1, tok, p.expr2, p.block_stmt)
+        else:
+            return RangeStmt(p.expr0, None, tok, p.expr1, p.block_stmt)
 
     @_(
         'IF expr block_stmt',

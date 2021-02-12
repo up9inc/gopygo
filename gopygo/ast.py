@@ -221,3 +221,12 @@ class KeyValueExpr():
     def __init__(self, key, value):
         self.key = key
         self.value = value
+
+
+class RangeStmt():
+    def __init__(self, key, value, tok: str, x, body: BlockStmt):
+        self.key = key
+        self.value = value
+        self.tok = tok
+        self.x = x
+        self.body = body

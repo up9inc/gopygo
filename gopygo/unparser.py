@@ -209,6 +209,19 @@ class Generator():
         text += getattr(self, _get_node_type(node.body))(node.body)
         return text
 
+    def range_stmt(self, node):
+        text = '%sfor' % (self.indent * INDENT)
+        if node.key is not None:
+            text += ' %s' % getattr(self, _get_node_type(node.key))(node.key).lstrip().rstrip()
+        if node.value is not None:
+            text += ', %s' % getattr(self, _get_node_type(node.value))(node.value).lstrip().rstrip()
+        text += '%s range %s %s' % (
+            (' %s' % node.tok) if node.tok != Token.ILLEGAL else '',
+            getattr(self, _get_node_type(node.x))(node.x).lstrip().rstrip(),
+            getattr(self, _get_node_type(node.body))(node.body)
+        )
+        return text
+
     def branch_stmt(self, node):
         text = '%s%s' % (
             self.indent * INDENT,
