@@ -127,8 +127,14 @@ class AssignStmt():
         self.rhs = rhs
 
 
+class FuncLit():
+    def __init__(self, _type: FuncType, body: BlockStmt):
+        self.type = _type
+        self.body = body
+
+
 class ReturnStmt():
-    def __init__(self, results: List[str]):
+    def __init__(self, results: List[Union[str, FuncLit]]):
         self.results = results
 
 

@@ -9,6 +9,7 @@
 import re
 
 from gopygo.enums import Token
+from gopygo.ast import FuncType
 
 INDENT = '    '
 
@@ -89,13 +90,17 @@ class Generator():
         return text
 
     def field(self, node):
+        text = ''
+        if isinstance(node.type, FuncType):
+            text += 'func'
         if node.name is None:
-            return '%s' % getattr(self, _get_node_type(node.type))(node.type)
+            text += '%s' % getattr(self, _get_node_type(node.type))(node.type)
         else:
-            return '%s %s' % (
+            text += '%s %s' % (
                 node.name,
                 getattr(self, _get_node_type(node.type))(node.type)
             )
+        return text
 
     def block_stmt(self, node):
         text = '{\n'
@@ -359,6 +364,12 @@ class Generator():
 
     def ellipsis(self, node):
         return '...%s' % getattr(self, _get_node_type(node.type))(node.type)
+
+    def func_lit(self, node):
+        return 'func%s %s' % (
+            getattr(self, _get_node_type(node.type))(node.type),
+            getattr(self, _get_node_type(node.body))(node.body).rstrip()
+        )
 
 
 def unparse(tree):

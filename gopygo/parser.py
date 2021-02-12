@@ -45,7 +45,8 @@ from gopygo.ast import (
     MapType,
     KeyValueExpr,
     RangeStmt,
-    Ellipsis
+    Ellipsis,
+    FuncLit
 )
 from gopygo.exceptions import (
     LexerError
@@ -257,8 +258,8 @@ class GoParser(Parser):
         '_import NEWLINE',
         'comment line',
         'comment',
-        'func NEWLINE line',
-        'func NEWLINE',
+        'func_decl NEWLINE line',
+        'func_decl NEWLINE',
         'stmt line',
         'stmt'
     )
@@ -310,8 +311,22 @@ class GoParser(Parser):
             return [BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])]
 
     @_('FUNC IDENT func_type block_stmt')
-    def func(self, p):
+    def func_decl(self, p):
         return FuncDecl(p.IDENT, p.func_type, p.block_stmt)
+
+    @_('FUNC func_type block_stmt')
+    def func_lit(self, p):
+        return FuncLit(p.func_type, p.block_stmt)
+
+    @_(
+        'func_lit',
+        'func_lit COMMA func_lits',
+    )
+    def func_lits(self, p):
+        if hasattr(p, 'func_lits'):
+            return [p.func_lit] + p.func_lits
+        else:
+            return [p.func_lit]
 
     @_(
         'LPAREN field_list RPAREN field_list',
@@ -337,15 +352,27 @@ class GoParser(Parser):
         '_type',
         'ELLIPSIS _type',
         'IDENT _type',
-        'IDENT ELLIPSIS _type'
+        'IDENT ELLIPSIS _type',
+        'FUNC LPAREN RPAREN _type',
     )
     def field(self, p):
+        if hasattr(p, 'FUNC'):
+            return Field(
+                None,
+                FuncType(
+                    FieldList([]),
+                    FieldList([
+                        Field(None, p._type)
+                    ])
+                )
+            )
+
         if len(p) == 3:
-            return Field(p.IDENT, Ellipsis(p[2]))
+            return Field(p.IDENT, Ellipsis(p._type))
         elif len(p) == 2:
-            return Field(p.IDENT, p[1])
+            return Field(p.IDENT, p._type)
         else:
-            return Field(None, p[0])
+            return Field(None, p._type)
 
     @_(
         'LBRACE stmts RBRACE',
@@ -572,10 +599,11 @@ class GoParser(Parser):
             return [p._type]
 
     @_(
-        'RETURN args NEWLINE'
+        'RETURN args NEWLINE',
+        'RETURN func_lits NEWLINE'
     )
     def stmt(self, p):
-        return ReturnStmt(p.args)
+        return ReturnStmt(p[1])
 
     @_(
         'VAR value_spec NEWLINE',

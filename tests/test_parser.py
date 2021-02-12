@@ -592,6 +592,64 @@ func main() {
 """
         self.parse_unparse()
 
+    def test_029_closures(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func closure() func() int {
+    i := 0
+    return func() int {
+        i++
+        return i
+    }
+}
+
+func main() {
+    nextInt := closure()
+    fmt.Println(nextInt())
+    fmt.Println(nextInt())
+    fmt.Println(nextInt())
+    newInts := closure()
+    fmt.Println(newInts())
+}
+"""
+        self.parse_unparse()
+
+    def test_030_multiple_closures(self):
+        self.program = """
+package main
+
+import "fmt"
+
+func closure() (func() int, func() int) {
+    i := 0
+    j := 0
+    return func() int {
+        i++
+        return i
+    }, func() int {
+        j--
+        return j
+    }
+}
+
+func main() {
+    nextInt, nextInt2 := closure()
+    fmt.Println(nextInt())
+    fmt.Println(nextInt())
+    fmt.Println(nextInt())
+    fmt.Println(nextInt2())
+    fmt.Println(nextInt2())
+    fmt.Println(nextInt2())
+    newInts, nextInts2 := closure()
+    fmt.Println(newInts())
+    fmt.Println(nextInts2())
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 
