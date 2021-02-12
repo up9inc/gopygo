@@ -711,6 +711,9 @@ type Employee struct {
     age int
     salary int
 }
+func newPerson(name string) *person {
+    fmt.Println("Hello, World!")
+}
 """
         self.parse_unparse()
 
