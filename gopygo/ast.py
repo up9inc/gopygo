@@ -242,3 +242,8 @@ class RangeStmt():
 class Ellipsis():
     def __init__(self, _type: str):
         self.type = _type
+
+
+class StarExpr():
+    def __init__(self, x):
+        self.x = x

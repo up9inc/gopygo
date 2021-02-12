@@ -46,7 +46,8 @@ from gopygo.ast import (
     KeyValueExpr,
     RangeStmt,
     Ellipsis,
-    FuncLit
+    FuncLit,
+    StarExpr
 )
 from gopygo.exceptions import (
     LexerError
@@ -235,7 +236,7 @@ class GoParser(Parser):
     precedence = (
         ('left', ADD, SUB),
         ('left', MUL, QUO),
-        ('right', USUB, UXOR, UNOT),
+        ('right', USUB, UXOR, UNOT, UADD),
     )
 
     def __init__(self):
@@ -354,25 +355,34 @@ class GoParser(Parser):
         'IDENT _type',
         'IDENT ELLIPSIS _type',
         'FUNC LPAREN RPAREN _type',
+        'FUNC LPAREN RPAREN ELLIPSIS _type',
+        'MUL _type',
+        'ELLIPSIS MUL _type',
+        'IDENT MUL _type',
+        'IDENT ELLIPSIS MUL _type',
+        'FUNC LPAREN RPAREN MUL _type',
+        'FUNC LPAREN RPAREN ELLIPSIS MUL _type',
     )
     def field(self, p):
+        _type = StarExpr(p._type) if hasattr(p, 'MUL') else p._type
         if hasattr(p, 'FUNC'):
             return Field(
                 None,
                 FuncType(
                     FieldList([]),
                     FieldList([
-                        Field(None, p._type)
+                        Field(None, _type)
                     ])
                 )
             )
 
-        if len(p) == 3:
-            return Field(p.IDENT, Ellipsis(p._type))
-        elif len(p) == 2:
-            return Field(p.IDENT, p._type)
+        if hasattr(p, 'ELLIPSIS'):
+            _type = Ellipsis(_type)
+
+        if hasattr(p, 'IDENT'):
+            return Field(p.IDENT, _type)
         else:
-            return Field(None, p._type)
+            return Field(None, _type)
 
     @_(
         'LBRACE stmts RBRACE',
@@ -809,6 +819,7 @@ class GoParser(Parser):
         'SUB expr %prec USUB',
         'XOR expr %prec UXOR',
         'NOT expr %prec UNOT',
+        'AND expr %prec UADD',
     )
     def expr(self, p):
         return UnaryExpr(p[0], p.expr)
@@ -859,6 +870,10 @@ class GoParser(Parser):
     @_('expr COMMA expr')
     def expr(self, p):
         return [p.expr0] + list(flatten(p.expr1))
+
+    @_('MUL IDENT')
+    def expr(self, p):
+        return StarExpr(Ident(p.IDENT))
 
     @_('IDENT')
     def expr(self, p):

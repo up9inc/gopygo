@@ -371,6 +371,9 @@ class Generator():
             getattr(self, _get_node_type(node.body))(node.body).rstrip()
         )
 
+    def star_expr(self, node):
+        return '*%s' % getattr(self, _get_node_type(node.x))(node.x)
+
 
 def unparse(tree):
     generator = Generator()
