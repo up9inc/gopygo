@@ -48,6 +48,7 @@ from gopygo.ast import (
 from gopygo.exceptions import (
     LexerError
 )
+from gopygo.enums import Token
 
 
 def flatten(p):
@@ -289,7 +290,7 @@ class GoParser(Parser):
     )
     def _import(self, p):
         if hasattr(p, 'STRING_LITERAL'):
-            return ImportSpec(BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1]))
+            return ImportSpec(BasicLit(Token.STRING, p.STRING_LITERAL[1:-1]))
         else:
             return ImportSpec(p._import_list)
 
@@ -301,9 +302,9 @@ class GoParser(Parser):
     )
     def _import_list(self, p):
         if hasattr(p, '_import_list'):
-            return [BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])] + p._import_list
+            return [BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])] + p._import_list
         else:
-            return [BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])]
+            return [BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])]
 
     @_('FUNC IDENT func_type block_stmt')
     def func(self, p):
@@ -764,31 +765,31 @@ class GoParser(Parser):
 
     @_('IMAG_LITERAL')
     def expr(self, p):
-        return BasicLit(GoLexer.IMAG_LITERAL, p.IMAG_LITERAL)
+        return BasicLit(Token.IMAG, p.IMAG_LITERAL)
 
     @_('FLOAT_LITERAL')
     def expr(self, p):
-        return BasicLit(GoLexer.FLOAT_LITERAL, p.FLOAT_LITERAL)
+        return BasicLit(Token.FLOAT, p.FLOAT_LITERAL)
 
     @_('INT_LITERAL')
     def expr(self, p):
-        return BasicLit(GoLexer.INT_LITERAL, p.INT_LITERAL)
+        return BasicLit(Token.INT, p.INT_LITERAL)
 
     @_('CHAR_LITERAL')
     def expr(self, p):
-        return BasicLit(GoLexer.CHAR_LITERAL, p.CHAR_LITERAL[1:-1])
+        return BasicLit(Token.CHAR, p.CHAR_LITERAL[1:-1])
 
     @_('STRING_LITERAL')
     def expr(self, p):
-        return BasicLit(GoLexer.STRING_LITERAL, p.STRING_LITERAL[1:-1])
+        return BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])
 
     @_('TRUE')
     def expr(self, p):
-        return BasicLit(GoLexer.TRUE, None)
+        return BasicLit(Token.TRUE, None)
 
     @_('FALSE')
     def expr(self, p):
-        return BasicLit(GoLexer.FALSE, None)
+        return BasicLit(Token.FALSE, None)
 
     @_('expr COMMA expr')
     def expr(self, p):

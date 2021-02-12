@@ -8,7 +8,7 @@
 
 import re
 
-from gopygo.parser import GoLexer
+from gopygo.enums import Token
 
 INDENT = '    '
 
@@ -275,13 +275,13 @@ class Generator():
         )
 
     def basic_lit(self, node):
-        if node.kind == GoLexer.STRING_LITERAL:
+        if node.kind == Token.STRING:
             return '"%s"' % node.value
-        elif node.kind == GoLexer.CHAR_LITERAL:
+        elif node.kind == Token.CHAR:
             return '\'%s\'' % node.value
-        elif node.kind == GoLexer.TRUE:
+        elif node.kind == Token.TRUE:
             return 'true'
-        elif node.kind == GoLexer.FALSE:
+        elif node.kind == Token.FALSE:
             return 'false'
         else:
             return node.value
