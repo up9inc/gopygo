@@ -695,6 +695,25 @@ func main() {
 """
         self.parse_unparse()
 
+    def test_033_structs(self):
+        self.program = """
+type person struct {
+    name string
+    age int
+}
+type Vertex struct {
+    X int
+    Y int
+}
+type Employee struct {
+    firstName string
+    lastName string
+    age int
+    salary int
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 

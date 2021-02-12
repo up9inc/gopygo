@@ -247,3 +247,15 @@ class Ellipsis():
 class StarExpr():
     def __init__(self, x):
         self.x = x
+
+
+class StructType():
+    def __init__(self, fields: FieldList, incomplete: bool):
+        self.fields = fields
+        self.incomplete = incomplete
+
+
+class TypeSpec():
+    def __init__(self, name: Ident, _type):
+        self.name = name
+        self.type = _type

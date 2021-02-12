@@ -81,12 +81,16 @@ class Generator():
                 text += ')'
         return text
 
-    def field_list(self, node):
+    def field_list(self, node, separator=', ', indent=''):
         text = ''
         for field in node.list:
-            text += '%s, ' % getattr(self, _get_node_type(field))(field)
+            text += '%s%s%s' % (
+                indent,
+                getattr(self, _get_node_type(field))(field),
+                separator
+            )
         if node.list:
-            text = text[:-2]
+            text = text[:-len(separator)]
         return text
 
     def field(self, node):
@@ -373,6 +377,21 @@ class Generator():
 
     def star_expr(self, node):
         return '*%s' % getattr(self, _get_node_type(node.x))(node.x)
+
+    def type_spec(self, node):
+        return '%s %s' % (
+            getattr(self, _get_node_type(node.name))(node.name),
+            getattr(self, _get_node_type(node.type))(node.type)
+        )
+
+    def struct_type(self, node):
+        return 'struct {\n%s\n}\n' % (
+            getattr(self, _get_node_type(node.fields))(
+                node.fields,
+                separator='\n',
+                indent=((self.indent + 1) * INDENT)
+            )
+        )
 
 
 def unparse(tree):

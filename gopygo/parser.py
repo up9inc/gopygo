@@ -47,7 +47,9 @@ from gopygo.ast import (
     RangeStmt,
     Ellipsis,
     FuncLit,
-    StarExpr
+    StarExpr,
+    StructType,
+    TypeSpec
 )
 from gopygo.exceptions import (
     LexerError
@@ -77,6 +79,7 @@ class GoLexer(Lexer):
         IF, ELSE,
         SWITCH, CASE, DEFAULT,
         MAP,
+        STRUCT,
 
         # Data types
         BOOL,
@@ -128,6 +131,7 @@ class GoLexer(Lexer):
     CASE = 'case'
     DEFAULT = 'DEFAULT'
     MAP = 'map'
+    STRUCT = 'struct'
 
     # Data types
     BOOL = 'bool'
@@ -339,7 +343,8 @@ class GoParser(Parser):
     @_(
         '',
         'field',
-        'field COMMA field_list'
+        'field COMMA field_list',
+        'field NEWLINE field_list'
     )
     def field_list(self, p):
         if len(p) > 2:
@@ -357,6 +362,7 @@ class GoParser(Parser):
         'FUNC LPAREN RPAREN _type',
         'FUNC LPAREN RPAREN ELLIPSIS _type',
         'MUL _type',
+        'MUL IDENT',
         'ELLIPSIS MUL _type',
         'IDENT MUL _type',
         'IDENT ELLIPSIS MUL _type',
@@ -364,7 +370,12 @@ class GoParser(Parser):
         'FUNC LPAREN RPAREN ELLIPSIS MUL _type',
     )
     def field(self, p):
-        _type = StarExpr(p._type) if hasattr(p, 'MUL') else p._type
+        _type = None
+        if not hasattr(p, '_type'):
+            _type = StarExpr(p.IDENT)
+        else:
+            _type = StarExpr(p._type) if hasattr(p, 'MUL') else p._type
+
         if hasattr(p, 'FUNC'):
             return Field(
                 None,
@@ -379,7 +390,7 @@ class GoParser(Parser):
         if hasattr(p, 'ELLIPSIS'):
             _type = Ellipsis(_type)
 
-        if hasattr(p, 'IDENT'):
+        if hasattr(p, '_type') and hasattr(p, 'IDENT'):
             return Field(p.IDENT, _type)
         else:
             return Field(None, _type)
@@ -616,18 +627,35 @@ class GoParser(Parser):
         return ReturnStmt(p[1])
 
     @_(
+        'TYPE IDENT STRUCT LBRACE field_list RBRACE NEWLINE',
+        'TYPE IDENT STRUCT LBRACE NEWLINE field_list RBRACE NEWLINE',
+        'TYPE IDENT STRUCT LBRACE field_list NEWLINE RBRACE NEWLINE',
+        'TYPE IDENT STRUCT LBRACE NEWLINE field_list NEWLINE RBRACE NEWLINE',
         'VAR value_spec NEWLINE',
         'CONST value_spec NEWLINE',
         'IMPORT value_spec NEWLINE',
         'TYPE value_spec NEWLINE',
     )
     def stmt(self, p):
-        return DeclStmt(
-            GenDecl(
-                p[0],
-                [p.value_spec]
+        if hasattr(p, 'IDENT'):
+            return DeclStmt(
+                GenDecl(
+                    p[0],
+                    [
+                        TypeSpec(
+                            p.IDENT,
+                            StructType(p.field_list, False)
+                        )
+                    ]
+                )
             )
-        )
+        else:
+            return DeclStmt(
+                GenDecl(
+                    p[0],
+                    [p.value_spec]
+                )
+            )
 
     @_(
         'BREAK NEWLINE',
