@@ -90,9 +90,12 @@ class Generator():
 
     def field(self, node):
         if node.name is None:
-            return '%s' % node.type
+            return '%s' % getattr(self, _get_node_type(node.type))(node.type)
         else:
-            return '%s %s' % (node.name, node.type)
+            return '%s %s' % (
+                node.name,
+                getattr(self, _get_node_type(node.type))(node.type)
+            )
 
     def block_stmt(self, node):
         text = '{\n'
@@ -116,6 +119,8 @@ class Generator():
             text += '%s, ' % getattr(self, _get_node_type(arg))(arg)
         if node.args:
             text = text[:-2]
+        if node.ellipsis and len(node.args) == 1:
+            text += '...'
         text += ')'
         return text
 
@@ -351,6 +356,9 @@ class Generator():
             getattr(self, _get_node_type(node.key))(node.key),
             getattr(self, _get_node_type(node.value))(node.value)
         )
+
+    def ellipsis(self, node):
+        return '...%s' % getattr(self, _get_node_type(node.type))(node.type)
 
 
 def unparse(tree):

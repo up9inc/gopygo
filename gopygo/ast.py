@@ -91,9 +91,10 @@ class SelectorExpr():
 
 
 class CallExpr():
-    def __init__(self, fun: str, args: list, chain=None):
+    def __init__(self, fun: str, args: list, ellipsis=False):
         self.fun = fun
         self.args = args
+        self.ellipsis = ellipsis
 
 
 class ArrayType():
@@ -230,3 +231,8 @@ class RangeStmt():
         self.tok = tok
         self.x = x
         self.body = body
+
+
+class Ellipsis():
+    def __init__(self, _type: str):
+        self.type = _type

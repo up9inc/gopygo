@@ -44,7 +44,8 @@ from gopygo.ast import (
     SliceExpr,
     MapType,
     KeyValueExpr,
-    RangeStmt
+    RangeStmt,
+    Ellipsis
 )
 from gopygo.exceptions import (
     LexerError
@@ -334,10 +335,14 @@ class GoParser(Parser):
 
     @_(
         '_type',
-        'IDENT _type'
+        'ELLIPSIS _type',
+        'IDENT _type',
+        'IDENT ELLIPSIS _type'
     )
     def field(self, p):
-        if len(p) == 2:
+        if len(p) == 3:
+            return Field(p.IDENT, Ellipsis(p[2]))
+        elif len(p) == 2:
             return Field(p.IDENT, p[1])
         else:
             return Field(None, p[0])
@@ -398,9 +403,13 @@ class GoParser(Parser):
         'selector_expr LPAREN args RPAREN',
         'IDENT LPAREN args RPAREN',
         '_type LPAREN args RPAREN',
+        'selector_expr LPAREN args ELLIPSIS RPAREN',
+        'IDENT LPAREN args ELLIPSIS RPAREN',
+        '_type LPAREN args ELLIPSIS RPAREN',
     )
     def call_expr(self, p):
-        return CallExpr(p[0], p.args)
+        ellipsis = True if hasattr(p, 'ELLIPSIS') else False
+        return CallExpr(p[0], p.args, ellipsis=ellipsis)
 
     @_('selector_expr')
     def expr(self, p):
