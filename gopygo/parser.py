@@ -41,7 +41,9 @@ from gopygo.ast import (
     ArrayType,
     IndexExpr,
     TypeAssertExpr,
-    SliceExpr
+    SliceExpr,
+    MapType,
+    KeyValueExpr
 )
 from gopygo.exceptions import (
     LexerError
@@ -69,6 +71,7 @@ class GoLexer(Lexer):
         FOR, BREAK, CONTINUE, GOTO, FALLTHROUGH,
         IF, ELSE,
         SWITCH, CASE, DEFAULT,
+        MAP,
 
         # Data types
         BOOL,
@@ -118,6 +121,7 @@ class GoLexer(Lexer):
     SWITCH = 'switch'
     CASE = 'case'
     DEFAULT = 'DEFAULT'
+    MAP = 'map'
 
     # Data types
     BOOL = 'bool'
@@ -668,6 +672,34 @@ class GoParser(Parser):
             return SliceExpr(p.expr0, p.expr1, p.expr2, p.expr3, True)
         else:
             return SliceExpr(p.expr0, p.expr1, p.expr2, None, False)
+
+    @_('map_type')
+    def expr(self, p):
+        return p.map_type
+
+    @_(
+        'MAP LBRACK expr RBRACK expr',
+        'MAP LBRACK _type RBRACK _type',
+    )
+    def map_type(self, p):
+        return MapType(p[2], p[4])
+
+    @_(
+        'expr COLON expr',
+        'expr COLON expr COMMA key_value_list',
+    )
+    def key_value_list(self, p):
+        if len(p) > 3:
+            return [KeyValueExpr(p.expr0, p.expr1)] + p.key_value_list
+        else:
+            return [KeyValueExpr(p.expr0, p.expr1)]
+
+    @_(
+        'map_type LBRACE key_value_list RBRACE',
+    )
+    def expr(self, p):
+        expr = p.key_value_list if isinstance(p.key_value_list, list) else [p.key_value_list]
+        return CompositeLit(p.map_type, expr, False)
 
     @_(
         'array_type LBRACE expr RBRACE'

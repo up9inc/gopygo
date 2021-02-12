@@ -209,3 +209,15 @@ class SliceExpr():
         self.high = high
         self.max = _max
         self.slice3 = slice3
+
+
+class MapType():
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+
+class KeyValueExpr():
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value

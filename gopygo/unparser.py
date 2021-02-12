@@ -327,6 +327,18 @@ class Generator():
             text += ':%s' % getattr(self, _get_node_type(_max))(_max)
         return text + ']'
 
+    def map_type(self, node):
+        return 'map[%s]%s' % (
+            getattr(self, _get_node_type(node.key))(node.key),
+            getattr(self, _get_node_type(node.value))(node.value)
+        )
+
+    def key_value_expr(self, node):
+        return '%s: %s' % (
+            getattr(self, _get_node_type(node.key))(node.key),
+            getattr(self, _get_node_type(node.value))(node.value)
+        )
+
 
 def unparse(tree):
     generator = Generator()
