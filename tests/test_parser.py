@@ -717,6 +717,27 @@ func newPerson(name string) *person {
 """
         self.parse_unparse()
 
+    def test_034_testify(self):
+        self.program = """
+package yours
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestSomething(t *testing.T) {
+    assert := assert.New(t)
+    assert.Equal(123, 123, "they should be equal")
+    assert.NotEqual(123, 456, "they should not be equal")
+    assert.Nil(object)
+    if assert.NotNil(object) {
+        assert.Equal("Something", object.Value)
+    }
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 

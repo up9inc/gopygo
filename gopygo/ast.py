@@ -56,7 +56,7 @@ class ImportSpec():
 
 
 class Field():
-    def __init__(self, name: str, _type: str):
+    def __init__(self, name: str, _type):
         self.name = name
         self.type = _type
 

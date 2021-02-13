@@ -362,17 +362,22 @@ class GoParser(Parser):
         'FUNC LPAREN RPAREN _type',
         'FUNC LPAREN RPAREN ELLIPSIS _type',
         'MUL _type',
-        'MUL IDENT',
         'ELLIPSIS MUL _type',
         'IDENT MUL _type',
         'IDENT ELLIPSIS MUL _type',
         'FUNC LPAREN RPAREN MUL _type',
         'FUNC LPAREN RPAREN ELLIPSIS MUL _type',
+        'MUL expr',
+        'ELLIPSIS MUL expr',
+        'IDENT MUL expr',
+        'IDENT ELLIPSIS MUL expr',
+        'FUNC LPAREN RPAREN MUL expr',
+        'FUNC LPAREN RPAREN ELLIPSIS MUL expr',
     )
     def field(self, p):
         _type = None
         if not hasattr(p, '_type'):
-            _type = StarExpr(p.IDENT)
+            _type = StarExpr(p.expr)
         else:
             _type = StarExpr(p._type) if hasattr(p, 'MUL') else p._type
 
@@ -390,7 +395,7 @@ class GoParser(Parser):
         if hasattr(p, 'ELLIPSIS'):
             _type = Ellipsis(_type)
 
-        if hasattr(p, '_type') and hasattr(p, 'IDENT'):
+        if (hasattr(p, '_type') or hasattr(p, 'expr')) and hasattr(p, 'IDENT'):
             return Field(p.IDENT, _type)
         else:
             return Field(None, _type)
