@@ -273,10 +273,7 @@ class GoParser(Parser):
             file = File(p[0])
             if len(p) > 2:
                 for i in p.line:
-                    if isinstance(i, ImportSpec):
-                        file.imports.append(i)
-                    else:
-                        file.decls.append(i)
+                    file.decls.append(i)
             return file
         else:
             if isinstance(p[0], Comment):
@@ -292,6 +289,8 @@ class GoParser(Parser):
 
     @_(
         'IMPORT STRING_LITERAL',
+        'IMPORT IDENT STRING_LITERAL',
+        'IMPORT PERIOD STRING_LITERAL',
         'IMPORT LPAREN _import_list NEWLINE RPAREN',
         'IMPORT LPAREN _import_list RPAREN',
         'IMPORT LPAREN NEWLINE _import_list NEWLINE RPAREN',
@@ -299,21 +298,47 @@ class GoParser(Parser):
     )
     def _import(self, p):
         if hasattr(p, 'STRING_LITERAL'):
-            return ImportSpec(BasicLit(Token.STRING, p.STRING_LITERAL[1:-1]))
+            ident = None
+            if hasattr(p, 'IDENT'):
+                ident = p.IDENT
+            elif hasattr(p, 'PERIOD'):
+                ident = p.PERIOD
+
+            return GenDecl(
+                p[0],
+                [ImportSpec(ident, BasicLit(Token.STRING, p.STRING_LITERAL[1:-1]))]
+            )
         else:
-            return ImportSpec(p._import_list)
+            return GenDecl(
+                p[0],
+                p._import_list
+            )
 
     @_(
         'STRING_LITERAL',
         'STRING_LITERAL NEWLINE',
         'STRING_LITERAL _import_list',
-        'STRING_LITERAL NEWLINE _import_list'
+        'STRING_LITERAL NEWLINE _import_list',
+        'IDENT STRING_LITERAL',
+        'IDENT STRING_LITERAL NEWLINE',
+        'IDENT STRING_LITERAL _import_list',
+        'IDENT STRING_LITERAL NEWLINE _import_list',
+        'PERIOD STRING_LITERAL',
+        'PERIOD STRING_LITERAL NEWLINE',
+        'PERIOD STRING_LITERAL _import_list',
+        'PERIOD STRING_LITERAL NEWLINE _import_list'
     )
     def _import_list(self, p):
+        ident = None
+        if hasattr(p, 'IDENT'):
+            ident = p.IDENT
+        elif hasattr(p, 'PERIOD'):
+            ident = p.PERIOD
+
         if hasattr(p, '_import_list'):
-            return [BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])] + p._import_list
+            return [ImportSpec(ident, BasicLit(Token.STRING, p.STRING_LITERAL[1:-1]))] + p._import_list
         else:
-            return [BasicLit(Token.STRING, p.STRING_LITERAL[1:-1])]
+            return [ImportSpec(ident, BasicLit(Token.STRING, p.STRING_LITERAL[1:-1]))]
 
     @_('FUNC IDENT func_type block_stmt')
     def func_decl(self, p):

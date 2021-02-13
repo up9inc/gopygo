@@ -31,10 +31,6 @@ class Generator():
     def file(self, node):
         text = getattr(self, _get_node_type(node.name))(node.name)
 
-        if node.imports:
-            text += '\n'
-        for _import in node.imports:
-            text += getattr(self, _get_node_type(_import))(_import)
         if node.decls:
             text += '\n'
 
@@ -46,19 +42,10 @@ class Generator():
         return 'package %s\n' % node.name
 
     def import_spec(self, node):
-        text = 'import '
-        if isinstance(node.path, list):
-            text += '(\n'
-            self.indent += 1
-            for path in node.path:
-                text += '%s%s\n' % (
-                    self.indent * INDENT,
-                    getattr(self, _get_node_type(path))(path)
-                )
-            self.indent -= 1
-            text += ')\n'
-        else:
-            text += '%s\n' % getattr(self, _get_node_type(node.path))(node.path)
+        text = ''
+        if node.name is not None:
+            text += '%s ' % getattr(self, _get_node_type(node.name))(node.name)
+        text += '%s\n' % getattr(self, _get_node_type(node.path))(node.path)
         return text
 
     def func_decl(self, node):
@@ -327,8 +314,20 @@ class Generator():
             self.indent * INDENT,
             node.tok
         )
+        if len(node.specs) > 1:
+            text += '(\n'
+            self.indent += 1
         for spec in node.specs:
-            text += getattr(self, _get_node_type(spec))(spec)
+            if len(node.specs) > 1:
+                text += '%s%s\n' % (
+                    self.indent * INDENT,
+                    getattr(self, _get_node_type(spec))(spec).rstrip()
+                )
+            else:
+                text += getattr(self, _get_node_type(spec))(spec)
+        if len(node.specs) > 1:
+            self.indent -= 1
+            text += ')\n'
         return text + '\n'
 
     def ident(self, node):

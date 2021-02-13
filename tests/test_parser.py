@@ -47,6 +47,7 @@ import "fmt"
 package main
 
 import "fmt"
+
 import "rsc.io/quote"
 """
         self.parse_unparse()
@@ -735,6 +736,23 @@ func TestSomething(t *testing.T) {
         assert.Equal("Something", object.Value)
     }
 }
+"""
+        self.parse_unparse()
+
+    def test_035_import_with_period_1(self):
+        self.program = """
+import (
+    "testing"
+    other "./somelib"
+    . "./somelib"
+)
+"""
+        self.parse_unparse()
+
+    def test_036_import_with_period_2(self):
+        self.program = """
+import . "./somelib"
+import other "./somelib"
 """
         self.parse_unparse()
 

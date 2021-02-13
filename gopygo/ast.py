@@ -46,12 +46,13 @@ class Package():
 class File():
     def __init__(self, name: Package):
         self.name = name
-        self.imports = []
+        self.imports = []  # unused, use GenDecl in self.decls instead
         self.decls = []
 
 
 class ImportSpec():
-    def __init__(self, path: Union[BasicLit, List[BasicLit]]):
+    def __init__(self, name: Union[Ident, str, None], path: Union[BasicLit, List[BasicLit]]):
+        self.name = name
         self.path = path
 
 
