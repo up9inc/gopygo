@@ -756,6 +756,16 @@ import other "./somelib"
 """
         self.parse_unparse()
 
+    def test_037_interface(self):
+        self.program = """
+m := map[string]interface{}{"a": "apple", "b": 2}
+type geometry interface {
+    area() float64
+    perim() float64
+}
+"""
+        self.parse_unparse()
+
 
 class TestExceptions():
 

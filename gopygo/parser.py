@@ -49,7 +49,8 @@ from gopygo.ast import (
     FuncLit,
     StarExpr,
     StructType,
-    TypeSpec
+    TypeSpec,
+    InterfaceType
 )
 from gopygo.exceptions import (
     LexerError
@@ -79,7 +80,7 @@ class GoLexer(Lexer):
         IF, ELSE,
         SWITCH, CASE, DEFAULT,
         MAP,
-        STRUCT,
+        STRUCT, INTERFACE,
 
         # Data types
         BOOL,
@@ -132,6 +133,7 @@ class GoLexer(Lexer):
     DEFAULT = 'DEFAULT'
     MAP = 'map'
     STRUCT = 'struct'
+    INTERFACE = 'interface'
 
     # Data types
     BOOL = 'bool'
@@ -386,18 +388,24 @@ class GoParser(Parser):
         'IDENT ELLIPSIS _type',
         'FUNC LPAREN RPAREN _type',
         'FUNC LPAREN RPAREN ELLIPSIS _type',
+        'IDENT LPAREN RPAREN _type',
+        'IDENT LPAREN RPAREN ELLIPSIS _type',
         'MUL _type',
         'ELLIPSIS MUL _type',
         'IDENT MUL _type',
         'IDENT ELLIPSIS MUL _type',
         'FUNC LPAREN RPAREN MUL _type',
         'FUNC LPAREN RPAREN ELLIPSIS MUL _type',
+        'IDENT LPAREN RPAREN MUL _type',
+        'IDENT LPAREN RPAREN ELLIPSIS MUL _type',
         'MUL expr',
         'ELLIPSIS MUL expr',
         'IDENT MUL expr',
         'IDENT ELLIPSIS MUL expr',
         'FUNC LPAREN RPAREN MUL expr',
         'FUNC LPAREN RPAREN ELLIPSIS MUL expr',
+        'IDENT LPAREN RPAREN MUL expr',
+        'IDENT LPAREN RPAREN ELLIPSIS MUL expr',
     )
     def field(self, p):
         _type = None
@@ -406,9 +414,12 @@ class GoParser(Parser):
         else:
             _type = StarExpr(p._type) if hasattr(p, 'MUL') else p._type
 
-        if hasattr(p, 'FUNC'):
+        if hasattr(p, 'LPAREN'):
+            name = None
+            if hasattr(p, 'IDENT'):
+                name = p.IDENT
             return Field(
-                None,
+                name,
                 FuncType(
                     FieldList([]),
                     FieldList([
@@ -661,6 +672,10 @@ class GoParser(Parser):
         'TYPE IDENT STRUCT LBRACE NEWLINE field_list RBRACE NEWLINE',
         'TYPE IDENT STRUCT LBRACE field_list NEWLINE RBRACE NEWLINE',
         'TYPE IDENT STRUCT LBRACE NEWLINE field_list NEWLINE RBRACE NEWLINE',
+        'TYPE IDENT INTERFACE LBRACE field_list RBRACE NEWLINE',
+        'TYPE IDENT INTERFACE LBRACE NEWLINE field_list RBRACE NEWLINE',
+        'TYPE IDENT INTERFACE LBRACE field_list NEWLINE RBRACE NEWLINE',
+        'TYPE IDENT INTERFACE LBRACE NEWLINE field_list NEWLINE RBRACE NEWLINE',
         'VAR value_spec NEWLINE',
         'CONST value_spec NEWLINE',
         'IMPORT value_spec NEWLINE',
@@ -668,13 +683,18 @@ class GoParser(Parser):
     )
     def stmt(self, p):
         if hasattr(p, 'IDENT'):
+            _type = None
+            if hasattr(p, 'INTERFACE'):
+                _type = InterfaceType(p.field_list, False)
+            else:
+                _type = StructType(p.field_list, False)
             return DeclStmt(
                 GenDecl(
                     p[0],
                     [
                         TypeSpec(
                             p.IDENT,
-                            StructType(p.field_list, False)
+                            _type
                         )
                     ]
                 )
@@ -814,9 +834,16 @@ class GoParser(Parser):
     @_(
         'MAP LBRACK expr RBRACK expr',
         'MAP LBRACK _type RBRACK _type',
+        'MAP LBRACK _type RBRACK interface_type',
     )
     def map_type(self, p):
         return MapType(p[2], p[4])
+
+    @_(
+        'INTERFACE LBRACE field_list RBRACE'
+    )
+    def interface_type(sef, p):
+        return InterfaceType(p.field_list, False)
 
     @_(
         'expr COLON expr',

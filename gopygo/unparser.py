@@ -82,13 +82,17 @@ class Generator():
 
     def field(self, node):
         text = ''
-        if isinstance(node.type, FuncType):
-            text += 'func'
         if node.name is None:
+            if isinstance(node.type, FuncType):
+                text += 'func'
             text += '%s' % getattr(self, _get_node_type(node.type))(node.type)
         else:
-            text += '%s %s' % (
+            gap = ' '
+            if isinstance(node.type, FuncType):
+                gap = ''
+            text += '%s%s%s' % (
                 node.name,
+                gap,
                 getattr(self, _get_node_type(node.type))(node.type)
             )
         return text
@@ -391,6 +395,18 @@ class Generator():
                 indent=((self.indent + 1) * INDENT)
             )
         )
+
+    def interface_type(self, node):
+        text = 'interface'
+        if node.methods.list:
+            text += ' {\n%s\n}' % getattr(self, _get_node_type(node.methods))(
+                node.methods,
+                separator='\n',
+                indent=((self.indent + 1) * INDENT)
+            )
+        else:
+            text += '{}'
+        return text
 
 
 def unparse(tree):

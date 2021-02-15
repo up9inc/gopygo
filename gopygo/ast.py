@@ -260,3 +260,9 @@ class TypeSpec():
     def __init__(self, name: Ident, _type):
         self.name = name
         self.type = _type
+
+
+class InterfaceType():
+    def __init__(self, methods: FieldList, incomplete: bool):
+        self.methods = methods
+        self.incomplete = incomplete
