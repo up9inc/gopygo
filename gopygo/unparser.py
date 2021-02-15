@@ -195,11 +195,15 @@ class Generator():
         x = getattr(self, _get_node_type(x))(x) if not isinstance(x, str) else x
         return '(%s)' % x
 
-    def list(self, node):
+    def list(self, node, separator=', ', indent=''):
         text = ''
         for elt in node:
-            text += '%s, ' % getattr(self, _get_node_type(elt))(elt)
-        if node:
+            text += '%s%s%s' % (
+                indent,
+                getattr(self, _get_node_type(elt))(elt),
+                separator
+            )
+        if node and not indent:
             text = text[:-2]
         return text
 
@@ -305,10 +309,18 @@ class Generator():
             return node.value
 
     def composite_lit(self, node):
-        return '%s{%s}' % (
-            getattr(self, _get_node_type(node.type))(node.type),
-            getattr(self, _get_node_type(node.elts))(node.elts)
-        )
+        if node.elts:
+            return '%s{\n%s%s}' % (
+                getattr(self, _get_node_type(node.type))(node.type),
+                getattr(self, _get_node_type(node.elts))(
+                    node.elts,
+                    separator=',\n',
+                    indent=((self.indent + 1) * INDENT)
+                ),
+                self.indent * INDENT
+            )
+        else:
+            return '%s{}' % getattr(self, _get_node_type(node.type))(node.type)
 
     def decl_stmt(self, node):
         return getattr(self, _get_node_type(node.decl))(node.decl)

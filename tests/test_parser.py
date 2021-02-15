@@ -441,7 +441,13 @@ func main() {
     fmt.Println("set:", a)
     fmt.Println("get:", a[4])
     fmt.Println("len:", len(a))
-    b := [5]int{1, 2, 3, 4, 5}
+    b := [5]int{
+        1,
+        2,
+        3,
+        4,
+        5,
+    }
     fmt.Println("dcl:", b)
     var twoD [2][3]int
     var twoD [2][3]int
@@ -485,7 +491,11 @@ func main() {
     fmt.Println("sl2:", l)
     l = s[2:]
     fmt.Println("sl3:", l)
-    t := []string{"g", "h", "i"}
+    t := []string{
+        "g",
+        "h",
+        "i",
+    }
     fmt.Println("dcl:", t)
     l := s[2:5:7]
     twoD := make([][]int, 3)
@@ -522,7 +532,10 @@ func main() {
     fmt.Println("map:", m)
     _, prs := m["k2"]
     fmt.Println("prs:", prs)
-    n := map[string]int{"foo": 1, "bar": 2}
+    n := map[string]int{
+        "foo": 1,
+        "bar": 2,
+    }
     fmt.Println("map:", n)
 }
 """
@@ -535,7 +548,12 @@ package main
 import "fmt"
 
 func main() {
-    nums := []int{2, 3, 4}
+    nums := []int{}
+    nums := []int{
+        2,
+        3,
+        4,
+    }
     sum := 0
     for _, num := range nums {
         sum += num
@@ -546,7 +564,10 @@ func main() {
             fmt.Println("index:", i)
         }
     }
-    kvs := map[string]string{"a": "apple", "b": "banana"}
+    kvs := map[string]string{
+        "a": "apple",
+        "b": "banana",
+    }
     for k, v := range kvs {
         fmt.Printf("%s -> %s\n", k, v)
     }
@@ -556,7 +577,12 @@ func main() {
     for i, c := range "go" {
         fmt.Println(i, c)
     }
-    nums := []int{1, 2, 3, 4}
+    nums := []int{
+        1,
+        2,
+        3,
+        4,
+    }
     var num int
     for _, num = range nums {
         fmt.Println("num:", num)
@@ -587,7 +613,12 @@ func sum(nums ...int) {
 func main() {
     sum(1, 2)
     sum(1, 2, 3)
-    nums := []int{1, 2, 3, 4}
+    nums := []int{
+        1,
+        2,
+        3,
+        4,
+    }
     sum(nums...)
 }
 """
@@ -758,7 +789,10 @@ import other "./somelib"
 
     def test_037_interface(self):
         self.program = """
-m := map[string]interface{}{"a": "apple", "b": 2}
+m := map[string]interface{}{
+    "a": "apple",
+    "b": 2,
+}
 type geometry interface {
     area() float64
     perim() float64

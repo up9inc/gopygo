@@ -847,26 +847,38 @@ class GoParser(Parser):
 
     @_(
         'expr COLON expr',
+        'expr COLON expr COMMA NEWLINE',
         'expr COLON expr COMMA key_value_list',
+        'expr COLON expr COMMA NEWLINE key_value_list',
     )
     def key_value_list(self, p):
-        if len(p) > 3:
+        if hasattr(p, 'key_value_list'):
             return [KeyValueExpr(p.expr0, p.expr1)] + p.key_value_list
         else:
             return [KeyValueExpr(p.expr0, p.expr1)]
 
     @_(
         'map_type LBRACE key_value_list RBRACE',
+        'map_type LBRACE NEWLINE key_value_list RBRACE',
+        'map_type LBRACE RBRACE',
     )
     def expr(self, p):
-        expr = p.key_value_list if isinstance(p.key_value_list, list) else [p.key_value_list]
+        expr = []
+        if hasattr(p, 'key_value_list'):
+            expr = p.key_value_list if isinstance(p.key_value_list, list) else [p.key_value_list]
         return CompositeLit(p.map_type, expr, False)
 
     @_(
-        'array_type LBRACE expr RBRACE'
+        'array_type LBRACE expr RBRACE',
+        'array_type LBRACE NEWLINE expr RBRACE',
+        'array_type LBRACE expr NEWLINE RBRACE',
+        'array_type LBRACE NEWLINE expr NEWLINE RBRACE',
+        'array_type LBRACE RBRACE',
     )
     def expr(self, p):
-        expr = p.expr if isinstance(p.expr, list) else [p.expr]
+        expr = []
+        if hasattr(p, 'expr'):
+            expr = p.expr if isinstance(p.expr, list) else [p.expr]
         return CompositeLit(p.array_type, expr, False)
 
     @_(
@@ -952,9 +964,19 @@ class GoParser(Parser):
     def expr(self, p):
         return BasicLit(Token.FALSE, None)
 
-    @_('expr COMMA expr')
+    @_(
+        'expr COMMA expr',
+        'expr COMMA NEWLINE expr'
+    )
     def expr(self, p):
         return [p.expr0] + list(flatten(p.expr1))
+
+    @_(
+        'expr COMMA',
+        'expr COMMA NEWLINE'
+    )
+    def expr(self, p):
+        return p.expr
 
     @_('MUL IDENT')
     def expr(self, p):
