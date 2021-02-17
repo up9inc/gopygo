@@ -9,12 +9,15 @@ class TestParser():
     def setup_method(self):
         self.program = None
 
-    def parse_unparse(self):
+    def parse_unparse(self, expect=None):
         self.program = self.program.lstrip()
 
         tree = parse(self.program)
         text = unparse(tree)
-        assert self.program == text
+        if expect is not None:
+            assert expect == text
+        else:
+            assert self.program == text
 
     def test_001_hello_world(self):
         self.program = """
@@ -799,6 +802,15 @@ type geometry interface {
 }
 """
         self.parse_unparse()
+
+    def test_038_assign_stmt_disabled_lhs(self):
+        self.program = """
+_ := some.Call()
+"""
+        expect = """
+some.Call()
+"""
+        self.parse_unparse(expect.lstrip())
 
 
 class TestExceptions():

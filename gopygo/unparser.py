@@ -9,7 +9,7 @@
 import re
 
 from gopygo.enums import Token
-from gopygo.ast import FuncType
+from gopygo.ast import Ident, FuncType
 
 INDENT = '    '
 
@@ -153,12 +153,30 @@ class Generator():
         )
 
     def assign_stmt(self, node):
-        return '%s%s %s %s\n' % (
-            self.indent * INDENT,
-            getattr(self, _get_node_type(node.lhs))(node.lhs),
-            node.token,
-            getattr(self, _get_node_type(node.rhs))(node.rhs),
-        )
+        disable_lhs = True
+        if isinstance(node.lhs, list):
+            for _node in node.lhs:
+                if isinstance(_node, Ident) and _node.name == '_':
+                    continue
+                else:
+                    disable_lhs = False
+        else:
+            disable_lhs = False
+            if isinstance(node.lhs, Ident) and node.lhs.name == '_':
+                disable_lhs = True
+
+        if disable_lhs:
+            return '%s%s\n' % (
+                self.indent * INDENT,
+                getattr(self, _get_node_type(node.rhs))(node.rhs),
+            )
+        else:
+            return '%s%s %s %s\n' % (
+                self.indent * INDENT,
+                getattr(self, _get_node_type(node.lhs))(node.lhs),
+                node.token,
+                getattr(self, _get_node_type(node.rhs))(node.rhs),
+            )
 
     def return_stmt(self, node):
         text = '%sreturn ' % (self.indent * INDENT)
