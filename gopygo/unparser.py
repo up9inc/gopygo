@@ -316,7 +316,7 @@ class Generator():
 
     def basic_lit(self, node):
         if node.kind == Token.STRING:
-            return '"%s"' % re.sub(r'(?<!\\)(?:\\{2})*\"', '\\"', node.value)
+            return '"%s"' % re.sub(r'(?<!\\)(?:\\{2})*\"', '\\"', str(node.value))
         elif node.kind == Token.CHAR:
             return '\'%s\'' % node.value
         elif node.kind == Token.TRUE:
