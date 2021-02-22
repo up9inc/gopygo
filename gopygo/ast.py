@@ -79,10 +79,11 @@ class BlockStmt():
 
 
 class FuncDecl():
-    def __init__(self, name: str, _type: FuncType, body: BlockStmt):
+    def __init__(self, name: str, _type: FuncType, body: BlockStmt, recv=None):
         self.name = name
         self.type = _type
         self.body = body
+        self.recv = recv
 
 
 class SelectorExpr():

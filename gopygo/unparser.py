@@ -49,7 +49,10 @@ class Generator():
         return text
 
     def func_decl(self, node):
-        text = 'func %s' % node.name
+        text = 'func %s%s' % (
+            ('(%s) ' % getattr(self, _get_node_type(node.recv))(node.recv)) if node.recv is not None else '',
+            node.name
+        )
         text += getattr(self, _get_node_type(node.type))(node.type)
         text += ' '
         text += getattr(self, _get_node_type(node.body))(node.body)
@@ -429,7 +432,7 @@ class Generator():
     def interface_type(self, node):
         text = 'interface'
         if node.methods.list:
-            text += ' {\n%s\n}' % getattr(self, _get_node_type(node.methods))(
+            text += ' {\n%s\n}\n' % getattr(self, _get_node_type(node.methods))(
                 node.methods,
                 separator='\n',
                 indent=((self.indent + 1) * INDENT)
