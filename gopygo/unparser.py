@@ -331,15 +331,16 @@ class Generator():
 
     def composite_lit(self, node):
         if node.elts:
-            return '%s{\n%s%s}' % (
-                getattr(self, _get_node_type(node.type))(node.type),
-                getattr(self, _get_node_type(node.elts))(
-                    node.elts,
-                    separator=',\n',
-                    indent=((self.indent + 1) * INDENT)
-                ),
-                self.indent * INDENT
+            text = '%s{\n' % getattr(self, _get_node_type(node.type))(node.type)
+            self.indent += 1
+            text += '%s' % getattr(self, _get_node_type(node.elts))(
+                node.elts,
+                separator=',\n',
+                indent=(self.indent * INDENT)
             )
+            self.indent -= 1
+            text += '%s}' % (self.indent * INDENT)
+            return text
         else:
             return '%s{}' % getattr(self, _get_node_type(node.type))(node.type)
 
