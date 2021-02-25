@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name="gopygo",
     packages=["gopygo"],
-    version="0.2.0",
+    version="0.3.0",
     author="M. Mert Yildiran",
     author_email="mehmet@up9.com",
     url="http://github.com/up9inc/gopygo",
