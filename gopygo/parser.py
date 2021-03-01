@@ -6,7 +6,10 @@
     :synopsis: Go parser module.
 """
 
+import os
+
 from sly import Lexer, Parser
+from sly.yacc import SlyLogger
 
 from gopygo.ast import (
     Ident,
@@ -237,6 +240,8 @@ class GoLexer(Lexer):
 
 
 class GoParser(Parser):
+    log = SlyLogger(open(os.devnull, 'w'))  # To enable logging: SlyLogger(sys.stderr)
+
     tokens = GoLexer.tokens
 
     precedence = (
