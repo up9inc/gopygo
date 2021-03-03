@@ -425,7 +425,7 @@ func main() {
     case int, float32:
         fmt.Println("I'm an int")
     default:
-        fmt.Printf("Don't know type %T\n", t)
+        fmt.Printf("Don't know type %T", t)
     }
 }
 """
@@ -572,7 +572,7 @@ func main() {
         "b": "banana",
     }
     for k, v := range kvs {
-        fmt.Printf("%s -> %s\n", k, v)
+        fmt.Printf("%s -> %s", k, v)
     }
     for k := range kvs {
         fmt.Println("key:", k)

@@ -7,6 +7,7 @@
 """
 
 import re
+import json
 
 from gopygo.enums import Token
 from gopygo.ast import Ident, FuncType
@@ -319,7 +320,7 @@ class Generator():
 
     def basic_lit(self, node):
         if node.kind == Token.STRING:
-            return '"%s"' % re.sub(r'(?<!\\)(?:\\{2})*\"', '\\"', str(node.value))
+            return '%s' % json.dumps(node.value)
         elif node.kind == Token.CHAR:
             return '\'%s\'' % node.value
         elif node.kind == Token.TRUE:
